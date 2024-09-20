@@ -1,7 +1,8 @@
-from flask import Flask, request, jsonify
-from flask_sqlalchemy import SQLAlchemy
+from flask import Flask
 from flask_cors import CORS
 import os
+from models import db
+from routes import main
 
 app = Flask(__name__)
 
@@ -15,14 +16,10 @@ POSTGRES_DB = os.getenv("POSTGRES_DB")
 app.config['SQLALCHEMY_DATABASE_URI'] = f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}/{POSTGRES_DB}"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-db = SQLAlchemy(app)
+db.init_app(app)
 CORS(app, supports_credentials=True)
 
-@app.route("/")
-def config():
-    print(POSTGRES_USER)
-    return {"hello":"world"}
-
+app.register_blueprint(main)
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5001, debug=True)
