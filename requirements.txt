@@ -1,4 +1,6 @@
 flask
 flask_cors
 flask_sqlalchemy
+pandas
+python-dotenv
 psycopg2-binary
