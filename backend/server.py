@@ -1,19 +1,16 @@
 from flask import Flask
 from flask_cors import CORS
 import os
+from dotenv import load_dotenv
 from models import db
 from routes import main
 
+load_dotenv()
+
 app = Flask(__name__)
 
-# Configure PostgreSQL database URI
-POSTGRES_USER = os.getenv("POSTGRES_USER")
-POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
-POSTGRES_HOST = os.getenv("POSTGRES_HOST")
-POSTGRES_DB = os.getenv("POSTGRES_DB")
-
-# PostgreSQL URI format: postgresql://username:password@host:port/database_name
-app.config['SQLALCHEMY_DATABASE_URI'] = f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}/{POSTGRES_DB}"
+DATABASE_URL = os.getenv("DATABASE_URL")
+app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)

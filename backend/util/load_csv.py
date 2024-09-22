@@ -19,23 +19,23 @@ class Employee(Base):
     reporting_manager = Column(Integer, ForeignKey('employee.staff_id'))
     role = Column(Integer, nullable=False)
 
-# DATABASE_URL = os.getenv("DATABASE_URL")
-# engine = create_engine(DATABASE_URL)
-# Base.metadata.create_all(engine)  # Create tables if they don't exist
-# Session = sessionmaker(bind=engine)
+DATABASE_URL = os.getenv("DATABASE_URL")
+engine = create_engine(DATABASE_URL)
+Base.metadata.create_all(engine)  # Create tables if they don't exist
+Session = sessionmaker(bind=engine)
 
 df = pd.read_csv('../employeenew.csv')
 print(df.head())
 
 # Import data into PostgreSQL
-# session = Session()
+session = Session()
 
 for index, row in df.iterrows():
     employee = Employee(staff_id=row['Staff_ID'], staff_fname=row['Staff_FName'], staff_lname=row['Staff_LName'],
                         dept=row['Dept'], position=row['Position'], country=row['Country'],
                         email=row['Email'], reporting_manager=row['Reporting_Manager'], role=row['Role'])  
     
-    # session.add(employee)
+    session.add(employee)
 
-# session.commit()  # Commit the transaction
-# session.close()   # Close the session
+session.commit()  
+session.close() 
