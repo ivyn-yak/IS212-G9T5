@@ -3,6 +3,11 @@ import pandas as pd
 from sqlalchemy import create_engine, Column, Integer, String, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+from dotenv import load_dotenv
+
+# Get the full path to the .env file
+dotenv_path = os.path.join(os.path.dirname(__file__), '.env')
+load_dotenv(dotenv_path)
 
 Base = declarative_base()
 
@@ -20,6 +25,7 @@ class Employee(Base):
     role = Column(Integer, nullable=False)
 
 DATABASE_URL = os.getenv("DATABASE_URL")
+print(DATABASE_URL)
 engine = create_engine(DATABASE_URL)
 Base.metadata.create_all(engine)  # Create tables if they don't exist
 Session = sessionmaker(bind=engine)
@@ -29,6 +35,7 @@ print(df.head())
 
 # Import data into PostgreSQL
 session = Session()
+session = Session()
 
 for index, row in df.iterrows():
     employee = Employee(staff_id=row['Staff_ID'], staff_fname=row['Staff_FName'], staff_lname=row['Staff_LName'],
@@ -37,5 +44,5 @@ for index, row in df.iterrows():
     
     session.add(employee)
 
-session.commit()  
-session.close() 
+session.commit()  # Commit the transaction
+session.close()   # Close the session
