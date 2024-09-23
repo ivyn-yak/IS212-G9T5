@@ -55,3 +55,10 @@ def get_team_data(staff_id):
                     ids.append(employee.staff_id)
 
     return jsonify([employee.json() for employee in team])
+
+@main.route("/api/check-tables", methods=['GET'])
+def check_tables():
+    # Use the inspector to get a list of tables
+    inspector = inspect(db.engine)
+    tables = inspector.get_table_names()
+    return jsonify({"tables": tables})
