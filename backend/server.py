@@ -14,6 +14,8 @@ app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
+
+
 CORS(app, supports_credentials=True)
 
 app.register_blueprint(main)
