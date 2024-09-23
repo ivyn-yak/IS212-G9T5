@@ -5,17 +5,17 @@ from models import *
 # Define a blueprint
 main = Blueprint('main', __name__)
 
-@main.route("/")
+@main.route("/api/")
 def config():
     return {"hello":"world"}
 
 ##### EMPLOYEE TABLE #####
-@main.route("/all")
+@main.route("/api/all")
 def get_org_data():
     data = Employee.query.all()
     return jsonify([employee.json() for employee in data])
 
-@main.route("/staff/<int:staff_id>")
+@main.route("/api/staff/<int:staff_id>")
 def get_staff_data(staff_id):
     employee = Employee.query.filter_by(staff_id=staff_id).first()
 
@@ -24,7 +24,7 @@ def get_staff_data(staff_id):
 
     return jsonify(employee.json())
 
-@main.route("/team/<int:staff_id>")
+@main.route("/api/team/<int:staff_id>")
 def get_team_data(staff_id):
     employee = Employee.query.filter_by(staff_id=staff_id).first()
     if employee is None:
