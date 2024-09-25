@@ -1,6 +1,7 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint, request, jsonify
 import json
 from models import *
+from util.staff_apply import *
 
 # Define a blueprint
 main = Blueprint('main', __name__)
@@ -62,3 +63,27 @@ def check_tables():
     inspector = inspect(db.engine)
     tables = inspector.get_table_names()
     return jsonify({"tables": tables})
+
+##### STAFF APPLY #####
+
+@main.route("/api/apply", methods=['POST'])
+def apply():
+
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "Invalid JSON or no data provided"}), 400
+    
+    if data.get("request_type") == "Ad-hoc":
+        return handle_adhoc_request(data)
+    
+    elif data.get("request_type") == "Recurring":
+        pass
+        # Not implemented yet
+        # return handle_recurring_request(data)
+    else:
+        return jsonify({"error": "Invalid request type"}), 400
+    
+    
+
+
+    
