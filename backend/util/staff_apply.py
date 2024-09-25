@@ -1,6 +1,6 @@
 from flask import jsonify
 from datetime import date, timedelta
-from ..models import *
+from models import *
 
 def handle_adhoc_request(data):
     try:
