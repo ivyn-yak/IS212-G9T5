@@ -1,0 +1,21 @@
+/* Sidebar styling */
+.sideBar {
+    position: fixed;              /* Fix the sidebar to the left */
+    top: 60px;                    /* Push the sidebar below the navbar */
+    left: 0;
+    height: calc(100% - 60px);     /* Subtract the navbar height from the sidebar height */
+    width: 240px;                 /* Fixed width */
+    background-color: #f4f4f4;
+    z-index: 500;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.1); /* Optional shadow */
+  }
+  
+  .sidebar-heading {
+    /* font-family: 'Open Sans', sans-serif; */
+    font-size: 12px;       /* Make the font smaller */
+    color: #9e9e9e;        /* Light grey color */
+    font-weight: bold;     /* Optional: if you want it to be bold */
+    text-transform: uppercase; /* Convert text to uppercase like in your example */
+    margin-bottom: 10px;   /* Add some spacing below the heading */
+    text-align: left;   
+  }
