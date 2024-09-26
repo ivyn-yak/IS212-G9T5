@@ -1,61 +1,8 @@
-from flask import Blueprint, jsonify
-from datetime import datetime, timedelta
-import json
+from flask import Blueprint, jsonify, request
 from models import *
+from datetime import datetime, timedelta
 
-# Define a blueprint
-main = Blueprint('main', __name__)
-
-@main.route("/api/")
-def config():
-    return {"hello":"world"}
-
-##### EMPLOYEE TABLE #####
-@main.route("/api/all")
-def get_org_data():
-    data = Employee.query.all()
-    return jsonify([employee.json() for employee in data])
-
-@main.route("/api/staff/<int:staff_id>")
-def get_staff_data(staff_id):
-    employee = Employee.query.filter_by(staff_id=staff_id).first()
-
-    if employee is None:
-        return jsonify({'error': 'Employee not found'}), 404
-
-    return jsonify(employee.json())
-
-@main.route("/api/team/<int:staff_id>")
-def get_team_data(staff_id):
-    employee = Employee.query.filter_by(staff_id=staff_id).first()
-    if employee is None:
-        return jsonify({'error': 'Employee not found'}), 404
-
-    role = employee.role
-
-    if role == 2:
-        rm_id = employee.reporting_manager
-        team = Employee.query.filter_by(reporting_manager=rm_id).all()
-    
-    else:
-        ids = []
-        rm_id = staff_id
-        team = Employee.query.filter_by(reporting_manager=rm_id).all()
-
-        for employee in team:
-            if employee.role != 2:
-                ids.append(employee.staff_id)
-
-        while ids:
-            rm_id = ids.pop()
-            subteam = Employee.query.filter_by(reporting_manager=rm_id).all()
-            team += subteam
-
-            for employee in subteam:
-                if employee.role != 2:
-                    ids.append(employee.staff_id)
-
-    return jsonify([employee.json() for employee in team])
+dates = Blueprint('dates', __name__)
 
 ##### WFHREQUESTDATES TABLE #####
 # Get all wfh dates for a certain staff id
@@ -70,7 +17,7 @@ def get_team_data(staff_id):
 #     "is_pm": true
 #   }
 # ]
-@main.route("/api/staff/<int:staff_id>/wfh_dates", methods=["GET"])
+@dates.route("/api/staff/<int:staff_id>/wfh_dates", methods=["GET"])
 def get_staff_wfh_dates(staff_id):
 
     wfh_dates = WFHRequestDates.query.filter_by(staff_id=staff_id).all()
@@ -92,7 +39,8 @@ def get_staff_wfh_dates(staff_id):
 #     "is_pm": false
 #   }
 # ]
-@main.route("/api/staff/<int:staff_id>/wfh_dates", methods=["GET"])
+
+@dates.route("/api/staff/<int:staff_id>/wfh_dates", methods=["GET"])
 def get_staff_wfh_dates_in_range(staff_id):
     start_date = request.args.get('start_date')
     end_date = request.args.get('end_date')
@@ -134,7 +82,7 @@ def get_staff_wfh_dates_in_range(staff_id):
 #   ]
 # }
 
-@main.route("/api/staff/<int:staff_id>/wfh_office_dates", methods=["GET"])
+@dates.route("/api/staff/<int:staff_id>/wfh_office_dates", methods=["GET"])
 def get_staff_wfh_and_office_dates_in_range(staff_id):
     start_date = request.args.get('start_date')
     end_date = request.args.get('end_date')
@@ -194,12 +142,3 @@ def get_staff_wfh_and_office_dates_in_range(staff_id):
         "wfh_dates": [wfh.json() for wfh in wfh_dates],
         "in_office_dates": in_office_days
     })
-
-
-##THIS CHECKS THE NAMES OF THE TABLES IN THE DB
-@main.route("/api/check-tables", methods=['GET'])
-def check_tables():
-    # Use the inspector to get a list of tables
-    inspector = inspect(db.engine)
-    tables = inspector.get_table_names()
-    return jsonify({"tables": tables})
