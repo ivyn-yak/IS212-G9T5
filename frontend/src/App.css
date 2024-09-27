@@ -1,36 +1,72 @@
 @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap');
 
+body, html {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  font-family: 'Open Sans', sans-serif;
+}
+
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  /* text-align: center; */
+  height: 100%;
+  width: 100%;
 }
 
 .app-layout {
   display: flex;
   flex-direction: column;
-  height: 100vh;
-}
-
-.content-area {
-  flex: 1;
-  padding: 20px;
-  overflow-y: auto;
-  margin: 0;
+  min-height: 100vh;
   width: 100%;
-  border: red 1px solid;
 }
 
-/* Adjust these as needed based on your Navbar and Sidebar components */
 .navbar {
   height: 60px;
+  width: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  /* Add your navbar styles here */
+}
+
+.main-container {
+  display: flex;
+  flex: 1;
+  width: 100%;
+  margin-top: 60px; /* Add top margin equal to navbar height */
 }
 
 .sidebar {
   width: 200px;
+  height: calc(100vh - 60px); /* Subtract navbar height */
   position: fixed;
   left: 0;
-  top: 60px;
-  bottom: 0;
+  top: 60px; /* Position below navbar */
+  overflow-y: auto;
+  /* Add your sidebar styles here */
+}
+
+.content-area {
+  flex: 1;
+  margin-left: 240px; /* Equal to sidebar width */
+  padding: 20px;
+  min-height: calc(100vh - 60px); /* Subtract navbar height */
+  box-sizing: border-box;
+}
+
+/* You may need to adjust these media queries based on your needs */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 100%;
+    height: auto;
+    position: static;
+  }
+  .content-area {
+    margin-left: 0;
+    width: 100%;
+  }
+  .main-container {
+    flex-direction: column;
+  }
 }
