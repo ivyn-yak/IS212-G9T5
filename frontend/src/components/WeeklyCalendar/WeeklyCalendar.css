@@ -1,0 +1,34 @@
+.weekly-schedule-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin: auto;
+  }
+  
+  .centered-table-container {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+  }
+  
+  .styled-table {
+    width: 80%;
+    margin: 0 auto;
+  }
+  
+  .shift-cell {
+    font-weight: bold;
+  }
+  
+  .footer-content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .search-field {
+    width: 200px;
+  }
+  
+  /* Add any additional styles you need here */
