@@ -48,13 +48,13 @@ class TestApp(flask_testing.TestCase):
 
 class TestStaffApply(TestApp):
     def test_staff_apply_adhoc_invalid_json(self):
-        request_body = None
+        request_body = {}
 
         response = self.client.post("/api/apply",
                                     data=json.dumps(request_body),
                                     content_type='application/json')
         
-        self.assertEqual(response.json, {"error": "Invalid JSON or no data provided"})
+        self.assertEqual(response.get_json(), {"error": "Invalid JSON or no data provided"})
 
     def test_staff_apply_adhoc(self):
 
@@ -75,7 +75,9 @@ class TestStaffApply(TestApp):
                                     content_type='application/json')
         
         self.assertEqual(response.status_code, 201)
-        self.assertEqual(response.get_json()["request"], {
+        self.assertEqual(response.get_json(), {
+            "message": "Ad-hoc request successfully created.",
+            "request": {
                 'request_id': 1,
                 'staff_id': 140008,
                 'manager_id': 140001,
@@ -90,7 +92,49 @@ class TestStaffApply(TestApp):
                 'withdrawable_until': "2024-09-29",
                 'request_reason': "Sick"
                 }
-            )
+            })
+        
+    def test_staff_apply_invalid_staff(self):
+        request_body = {
+            'staff_id': 0,
+            'request_type': 'Ad-hoc',
+            'start_date': "2024-09-15",
+            'end_date': "2024-09-15",
+            'recurrence_days': None,
+            'is_am': True,
+            'is_pm': True,
+            'apply_date': "2024-09-30",
+            'request_reason': "Sick"
+        }
+
+        response = self.client.post("/api/apply",
+                                    data=json.dumps(request_body),
+                                    content_type='application/json')
+        
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.get_json(), {"error": "Staff not found"})
+
+    def test_staff_apply_invalid_request_type(self):
+        request_body = {
+            'staff_id': 140008,
+            'request_type': 'Wrong Type',
+            'start_date': "2024-09-15",
+            'end_date': "2024-09-15",
+            'recurrence_days': None,
+            'is_am': True,
+            'is_pm': True,
+            'apply_date': "2024-09-30",
+            'request_reason': "Sick"
+        }
+
+        response = self.client.post("/api/apply",
+                                    data=json.dumps(request_body),
+                                    content_type='application/json')
+        
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_json(), {"error": "Invalid request type"})
+
+
 
 
 if __name__ == '__main__':

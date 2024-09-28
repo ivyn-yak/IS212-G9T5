@@ -14,7 +14,7 @@ def handle_adhoc_request(data):
         rm_id = staff["reporting_manager"]
         manager = get_employee_by_id(rm_id)
         if not manager:
-            return jsonify({"error": "Staff not found"}), 404
+            return jsonify({"error": "Manager not found"}), 404
 
         start_date=date.fromisoformat(data['start_date'])
         withdrawable_until = start_date + timedelta(weeks=2)

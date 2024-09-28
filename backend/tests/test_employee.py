@@ -1,7 +1,6 @@
 import unittest
 import flask_testing
 from server import app, db
-# from util.load_csv import import_employee_data
 from models import Employee
 
 class TestApp(flask_testing.TestCase):
