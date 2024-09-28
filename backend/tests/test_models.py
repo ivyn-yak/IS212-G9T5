@@ -1,16 +1,33 @@
 import unittest
-from server import app, db
+from unittest.mock import patch
 from models import *
 import datetime
 
-# class TestEmployee(unittest.TestCase):
-#     def test_json(self):
-#         e = Employee(name='Phris Coskitt', title='HRH')
-#         self.assertEqual(e.json(), {
-#             'id': None,
-#             'name': 'Phris Coskitt',
-#             'title': 'HRH'}
-#         )
+class TestEmployee(unittest.TestCase):
+    def test_json(self):
+        new_employee = Employee(
+            staff_id=140008,
+            staff_fname="Jaclyn",
+            staff_lname="Lee",
+            dept="Sales",
+            position="Sales Manager",
+            country="Singapore",
+            email="Jaclyn.Lee@allinone.com.sg",
+            reporting_manager=140001,
+            role=3
+        )
+        
+        self.assertEqual(new_employee.json(), {
+        "country": "Singapore",
+        "dept": "Sales",
+        "email": "Jaclyn.Lee@allinone.com.sg",
+        "position": "Sales Manager",
+        "reporting_manager": 140001,
+        "role": 3,
+        "staff_fname": "Jaclyn",
+        "staff_id": 140008,
+        "staff_lname": "Lee"
+        })
 
 class TestWFHRequests(unittest.TestCase):
     def test_json(self):
@@ -45,32 +62,47 @@ class TestWFHRequests(unittest.TestCase):
             'request_reason': "Sick"
         })
 
-# class TestWFHRequestDates(unittest.TestCase):
-#     def test_to_dict(self):
-#         p1 = WFHRequestDates(name='Kankan', title='Lord',
-#                      contact_num='+65 8888 8888', ewallet_balance=88)
-#         self.assertEqual(p1.to_dict(), {
-#             'id': None,
-#             'name': 'Kankan',
-#             'title': 'Lord',
-#             'contact_num': '+65 8888 8888',
-#             'ewallet_balance': 88}
-#         )
+class TestWFHRequestDates(unittest.TestCase):
+    def test_json(self):
+        date = WFHRequestDates(
+            request_id=1, 
+            specific_date=datetime.date(2024, 9, 15),
+            staff_id=140008, 
+            is_am=True,
+            is_pm=True
+            )
+        
+        self.assertEqual(date.json(), {
+            "date_id": None,
+            "request_id": 1,
+            "specific_date": "2024-09-15",
+            "staff_id": 140008,
+            "is_am": True,
+            "is_pm": True
+        })
 
-# class TestRequestDecisions(unittest.TestCase):
-#     def test_to_dict(self):
-#         c1 = RequestDecisions(diagnosis='Nosebleed',
-#                           prescription='Tissue paper for nose',
-#                           charge=55, doctor_id=8, patient_id=9)
-#         self.assertEqual(c1.to_dict(), {
-#             'id': None,
-#             'diagnosis': 'Nosebleed',
-#             'prescription': 'Tissue paper for nose',
-#             'charge': 55,
-#             'doctor_id': 8,
-#             'patient_id': 9
-#             }
-#         )
+@patch('util.request_decisions.datetime')
+class TestRequestDecisions(unittest.TestCase):
+    def test_json(self, mock_datetime):
+        mock_datetime.today.return_value = datetime.date(2024, 12, 12)
+
+        decision = RequestDecisions(
+            request_id=1,
+            manager_id=140001,
+            decision_status="Approved",
+            decision_date=mock_datetime.today(),
+            decision_notes="Ok"
+            )
+        
+        self.assertEqual(decision.decision_date, datetime.date(2024, 12, 12))
+        self.assertEqual(decision.json(), {
+            "decision_id": None,
+            "request_id": 1,
+            "manager_id": 140001,
+            "decision_date": "2024-12-12",
+            "decision_status": "Approved",
+            "decision_notes": "Ok"
+        })
 
 
 if __name__ == "__main__":

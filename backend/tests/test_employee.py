@@ -32,7 +32,7 @@ class TestApp(flask_testing.TestCase):
         db.drop_all()
 
 class TestEmployee(TestApp):
-    def test_employee(self):
+    def test_get_employee(self):
         staff_id = 140008
 
         response = self.client.get(f"/api/staff/{staff_id}",
