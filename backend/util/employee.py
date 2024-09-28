@@ -4,8 +4,8 @@ from flask import jsonify
 def get_employee_by_id(staff_id):
     employee = Employee.query.filter_by(staff_id=staff_id).first()
     if not employee:
-        return None, jsonify({'error': 'Employee not found'}), 404
-    return employee, None, None
+        return None
+    return employee.json()
 
 def get_full_team(rm_id):
     team = Employee.query.filter_by(reporting_manager=rm_id).all()

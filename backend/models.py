@@ -36,6 +36,7 @@ class WFHRequests(db.Model):
 
     request_id = Column(Integer, primary_key=True)
     staff_id = Column(Integer, ForeignKey('employee.staff_id'), nullable=False)
+    manager_id = Column(Integer, ForeignKey('employee.staff_id'), nullable=False)
     request_type = Column(Enum('Ad-hoc', 'Recurring', name='request_type'), nullable=False)  # Ad-hoc or Recurring
     start_date = Column(Date, nullable=False)  
     end_date = Column(Date, nullable=False)    
@@ -47,12 +48,13 @@ class WFHRequests(db.Model):
     withdrawable_until = Column(Date, nullable=False)
     request_reason = Column(String, nullable=True)
 
-    employee = db.relationship('Employee')
+    employee = db.relationship('Employee', foreign_keys=[staff_id])
 
     def json(self):
         return {
             "request_id": self.request_id,
             "staff_id": self.staff_id,
+            "manager_id": self.manager_id,
             "request_type": self.request_type,
             "start_date": str(self.start_date),
             "end_date": str(self.end_date),

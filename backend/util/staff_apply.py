@@ -1,55 +1,35 @@
 from flask import jsonify
 from datetime import date, timedelta
 from models import *
+from util.employee import get_employee_by_id
 
 def handle_adhoc_request(data):
     try:
-        # TO DO: implement head count check for that day 
-
-        add_req = apply_wfh(data)  # Add to WFH requests table
-
-        if "error" in add_req:
-            return jsonify(add_req), 400
+        # get reporting manager
+        staff_id = data["staff_id"]
+        staff = get_employee_by_id(staff_id)
+        if not staff:
+            return jsonify({"error": "Staff not found"}), 404
         
-        # Successfully added the request, now handle the WFH date entry
-        request = add_req["request"]
+        rm_id = staff["reporting_manager"]
+        manager = get_employee_by_id(rm_id)
+        if not manager:
+            return jsonify({"error": "Staff not found"}), 404
 
-        date_data = {
-            "request_id": request.request_id,
-            "specific_date": request.start_date,
-            "staff_id": request.staff_id,
-            "is_am": request.is_am,
-            "is_pm": request.is_pm
-        }
-
-        add_date = add_wfh_date(date_data)  # Add to WFH dates table
-
-        if "error" in add_date:
-            return jsonify(add_date), 400
-        
-        return jsonify({
-            "message": "Ad-hoc request and date successfully added.",
-            "request": add_req
-        }), 201
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-def apply_wfh(data):
-    try:
-        apply_date=date.fromisoformat(data['apply_date'])
-        withdrawable_until = apply_date + timedelta(weeks=2)
+        start_date=date.fromisoformat(data['start_date'])
+        withdrawable_until = start_date + timedelta(weeks=2)
 
         new_request = WFHRequests(
-            staff_id=data['staff_id'],
+            staff_id=staff_id,
+            manager_id=rm_id,
             request_type=data['request_type'],  
-            start_date=date.fromisoformat(data['start_date']),  
+            start_date=start_date,  
             end_date=date.fromisoformat(data['end_date']),
-            recurrence_days=data.get('recurrence_days'),
+            recurrence_days=data.get('recurrence_days', ''),
             is_am=data['is_am'],
             is_pm=data['is_pm'], 
             request_status= "Pending",  
-            apply_date=apply_date,
+            apply_date=date.fromisoformat(data['apply_date']),
             withdrawable_until=withdrawable_until,
             request_reason=data.get('request_reason')
         )
@@ -57,12 +37,39 @@ def apply_wfh(data):
         db.session.add(new_request)
         db.session.commit()
 
-        return {"message": "WFH request successfully applied!", "request": new_request}
-
+        return jsonify({
+            "message": "Ad-hoc request successfully created.",
+            "request": new_request.json()
+        }), 201
+        
     except Exception as e:
         db.session.rollback()
-        return {"error": str(e)}
+        return jsonify({"error": str(e)}), 500
     
+def add_approved_date(request_id):
+    pass 
+    # TO DO: once request is approved, populate wfh dates table
+    # Not implemented yet
+
+    # request = get_request(request_id)
+    # date_data = {
+    #         "request_id": request.request_id,
+    #         "specific_date": request.start_date,
+    #         "staff_id": request.staff_id,
+    #         "is_am": request.is_am,
+    #         "is_pm": request.is_pm
+    #     }
+
+    # add_date = add_wfh_date(date_data)  # Add to WFH dates table
+
+    # if "error" in add_date:
+    #     return jsonify(add_date), 400
+    
+    # return jsonify({
+    #     "message": "Ad-hoc dates successfully added.",
+    #     "request": request
+    # }), 201
+
 def add_wfh_date(data):
     try: 
         new_date = WFHRequestDates(
