@@ -21,13 +21,6 @@
   .navbar-logo img {
     height: 30px;            /* Adjust logo size */
   }
-  
-  .buttons {
-    display: flex;            /* Enables flexbox layout */
-    align-items: center;      /* Vertically aligns the date and search bar */
-    gap: 20px;                /* Adds space between the date selector and search bar */
-  }
-
   .MuiStack-root {
     padding: 0 !important; /* Override the padding */
   }
