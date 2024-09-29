@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import { 
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TableFooter,
   Paper, Button, TextField, IconButton, InputAdornment, Box, Drawer, List, ListItem, ListItemText,
@@ -13,46 +14,51 @@ import SearchIcon from '@mui/icons-material/Search';
 import Card from '@mui/material/Card';
 import './WeeklyCalendar.css';
 
-// Mock data
-const mockScheduleData = {
-  staff: {
-    staffID: '1',
-    scheduleTrails: [
-      { date: '2023-09-25', is_am: true, is_pm: true },
-      { date: '2023-09-26', is_am: false, is_pm: true },
-      { date: '2023-09-27', is_am: true, is_pm: false },
+// Mock API function
+const fetchScheduleData = async (staffId, startDate, endDate) => {
+  console.log(`Fetching data for staffId: ${staffId}, startDate: ${startDate}, endDate: ${endDate}`);
+  // Return mock data for September 25-27, 2024
+  return {
+    staff: {
+      staffID: staffId,
+      scheduleTrails: [
+        { date: '2024-09-25', is_am: true, is_pm: true },
+        { date: '2024-09-26', is_am: false, is_pm: true },
+        { date: '2024-09-27', is_am: true, is_pm: false },
+      ]
+    },
+    team: [
+      {
+        staffID: '1',
+        name: 'John Doe',
+        scheduleTrails: [
+          { date: '2024-09-25', is_am: true, is_pm: true },
+          { date: '2024-09-26', is_am: false, is_pm: true },
+          { date: '2024-09-27', is_am: true, is_pm: false },
+        ]
+      },
+      {
+        staffID: '2',
+        name: 'Jane Smith',
+        scheduleTrails: [
+          { date: '2024-09-25', is_am: false, is_pm: false },
+          { date: '2024-09-26', is_am: true, is_pm: true },
+        ]
+      },
+      {
+        staffID: '3',
+        name: 'Bob Johnson',
+        scheduleTrails: [
+          { date: '2024-09-27', is_am: true, is_pm: true },
+        ]
+      },
     ]
-  },
-  team: [
-    {
-      staffID: '1',
-      name: 'John Doe',
-      scheduleTrails: [
-        { date: '2023-09-25', is_am: true, is_pm: true },
-        { date: '2023-09-26', is_am: false, is_pm: true },
-        { date: '2023-09-27', is_am: true, is_pm: false },
-      ]
-    },
-    {
-      staffID: '2',
-      name: 'Jane Smith',
-      scheduleTrails: [
-        { date: '2023-09-25', is_am: false, is_pm: false },
-        { date: '2023-09-26', is_am: true, is_pm: true },
-      ]
-    },
-    {
-      staffID: '3',
-      name: 'Bob Johnson',
-      scheduleTrails: [
-        { date: '2023-09-27', is_am: true, is_pm: true },
-      ]
-    },
-  ]
+  };
 };
 
 const WeeklySchedule = () => {
-  const [currentDate, setCurrentDate] = useState(dayjs());
+  const { staffId } = useParams();
+  const [selectedWeekStart, setSelectedWeekStart] = useState(dayjs().startOf('week'));
   const [showSearch, setShowSearch] = useState(true);
   const [scheduleData, setScheduleData] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -65,46 +71,69 @@ const WeeklySchedule = () => {
   ];
 
   useEffect(() => {
-    // Simulating API call to fetch schedule data
-    const fetchScheduleData = () => {
-      // In a real application, you would make an API call here
-      // For now, we'll just use the mock data
-      setScheduleData(mockScheduleData);
+    const fetchData = async () => {
+      const startOfWeek = selectedWeekStart.format('YYYY-MM-DD');
+      const endOfWeek = selectedWeekStart.endOf('week').format('YYYY-MM-DD');
+      const data = await fetchScheduleData(staffId, startOfWeek, endOfWeek);
+      console.log('Fetched schedule data:', data);
+      setScheduleData(data);
     };
 
-    fetchScheduleData();
-  }, [currentDate]);
+    fetchData();
+  }, [staffId, selectedWeekStart]);
 
   const getWeekDates = (date) => {
-    const startOfWeek = date.startOf('week');
-    return Array.from({ length: 7 }, (_, i) => startOfWeek.add(i, 'day'));
+    return Array.from({ length: 7 }, (_, i) => date.add(i, 'day'));
   };
 
-  const weekDates = getWeekDates(currentDate);
+  const weekDates = getWeekDates(selectedWeekStart);
 
   const handlePrevWeek = () => {
-    setCurrentDate(currentDate.subtract(1, 'week'));
+    setSelectedWeekStart(selectedWeekStart.subtract(1, 'week'));
   };
 
   const handleNextWeek = () => {
-    setCurrentDate(currentDate.add(1, 'week'));
+    setSelectedWeekStart(selectedWeekStart.add(1, 'week'));
   };
 
   const handleDateChange = (newDate) => {
-    setCurrentDate(dayjs(newDate));
+    setSelectedWeekStart(dayjs(newDate).startOf('week'));
+  };
+
+  const handleTodayClick = () => {
+    setSelectedWeekStart(dayjs().startOf('week'));
   };
 
   const getMySchedule = (date, shift) => {
-    if (!scheduleData) return 'Office'; // Default to office if data isn't loaded
+    console.log(`Getting schedule for date: ${date.format('YYYY-MM-DD')}, shift: ${shift}`);
+    if (!scheduleData) {
+      console.log('Schedule data not loaded yet');
+      return 'Office'; // Default to office if data isn't loaded
+    }
 
     const dateString = date.format('YYYY-MM-DD');
+    console.log('Looking for schedule item with date:', dateString);
+    console.log('Available schedule trails:', scheduleData.staff.scheduleTrails);
+
     const scheduleItem = scheduleData.staff.scheduleTrails.find(item => item.date === dateString);
     
-    if (!scheduleItem) return 'Office'; // Default to office if no schedule found for this date
+    console.log('Schedule item found:', scheduleItem);
+
+    if (!scheduleItem) {
+      console.log('No schedule item found for this date, defaulting to Office');
+      return 'Office'; // Default to office if no schedule found for this date
+    }
     
-    if (shift === 'AM' && scheduleItem.is_am) return 'Home';
-    if (shift === 'PM' && scheduleItem.is_pm) return 'Home';
+    if (shift === 'AM' && scheduleItem.is_am) {
+      console.log('AM shift and is_am is true, returning Home');
+      return 'Home';
+    }
+    if (shift === 'PM' && scheduleItem.is_pm) {
+      console.log('PM shift and is_pm is true, returning Home');
+      return 'Home';
+    }
     
+    console.log('Defaulting to Office');
     return 'Office';
   };
 
@@ -223,13 +252,13 @@ const WeeklySchedule = () => {
             <TableRow>
               <TableCell colSpan={8}>
                 <div className="footer-content">
-                  <Button variant="outlined" onClick={() => setCurrentDate(dayjs())}>
+                  <Button variant="outlined" onClick={handleTodayClick}>
                     Today
                   </Button>
                   <LocalizationProvider dateAdapter={AdapterDayjs}>
                     <DatePicker 
-                      label={currentDate.format('MMMM YYYY')}
-                      value={currentDate}
+                      label={selectedWeekStart.format('MMMM YYYY')}
+                      value={selectedWeekStart}
                       onChange={handleDateChange}
                     />
                   </LocalizationProvider>

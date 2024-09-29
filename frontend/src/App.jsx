@@ -17,7 +17,7 @@ function App() {
           <div className="content-area">
             <Routes>
               <Route path="/" element={<Home />} />
-              <Route path="/staff/view-schedule" element={<StaffViewSchedule />} />
+              <Route path="/:staffId/staff/viewStaffSchedule" element={<StaffViewSchedule />} />
             </Routes>
           </div>
         </div>
