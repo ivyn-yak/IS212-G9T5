@@ -30,8 +30,54 @@
   .search-field {
     width: 200px;
   }
-
+  
   .schedule-card {
     width: 100%;
     margin: 10px 0;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .schedule-card:hover {
+    background-color: #f5f5f5;
+  }
+  
+  /* Sidebar Styles */
+  .sidebar-content {
+    width: 300px;
+    padding: 20px;
+  }
+  
+  .sidebar-title {
+    margin-bottom: 10px;
+    color: #333;
+  }
+  
+  .sidebar-date {
+    margin-bottom: 5px;
+    color: #666;
+  }
+  
+  .sidebar-shift {
+    margin-bottom: 20px;
+    color: #999;
+  }
+  
+  .sidebar-subtitle {
+    margin-top: 20px;
+    margin-bottom: 10px;
+    color: #444;
+  }
+  
+  /* List Styles */
+  .MuiList-root {
+    padding: 0;
+  }
+  
+  .MuiListItem-root {
+    padding: 8px 0;
+  }
+  
+  .MuiListItemText-primary {
+    font-size: 14px;
   }

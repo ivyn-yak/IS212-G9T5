@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TableFooter,
-  Paper, Button, TextField, IconButton, InputAdornment, Box, Drawer, List, ListItem, ListItemText
+  Paper, Button, TextField, IconButton, InputAdornment, Box, Drawer, List, ListItem, ListItemText,
+  Typography
 } from '@mui/material';
 import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
@@ -13,37 +14,50 @@ import Card from '@mui/material/Card';
 import './WeeklyCalendar.css';
 
 // Mock data
-const mockScheduleData = [
-  { StaffID: '1', TeamID: 'A', Date: '2023-09-25', Work_from_home: true },
-  { StaffID: '2', TeamID: 'A', Date: '2023-09-25', Work_from_home: false },
-  { StaffID: '3', TeamID: 'A', Date: '2023-09-25', Work_from_home: true },
-  { StaffID: '4', TeamID: 'A', Date: '2023-09-26', Work_from_home: false },
-  { StaffID: '1', TeamID: 'A', Date: '2023-09-26', Work_from_home: false },
-  { StaffID: '2', TeamID: 'A', Date: '2023-09-26', Work_from_home: false },
-  { StaffID: '3', TeamID: 'A', Date: '2023-09-26', Work_from_home: true },
-  { StaffID: '4', TeamID: 'A', Date: '2023-09-27', Work_from_home: true },
-  { StaffID: '1', TeamID: 'A', Date: '2023-09-27', Work_from_home: true },
-  { StaffID: '2', TeamID: 'A', Date: '2023-09-27', Work_from_home: false },
-  { StaffID: '3', TeamID: 'A', Date: '2023-09-27', Work_from_home: false },
-  { StaffID: '4', TeamID: 'A', Date: '2023-09-25', Work_from_home: false },
-];
-
-const mockStaffData = [
-  { StaffID: '1', Name: 'John Doe' },
-  { StaffID: '2', Name: 'Jane Smith' },
-  { StaffID: '3', Name: 'Bob Johnson' },
-  { StaffID: '4', Name: 'Alice Brown' },
-];
+const mockScheduleData = {
+  staff: {
+    staffID: '1',
+    scheduleTrails: [
+      { date: '2023-09-25', is_am: true, is_pm: true },
+      { date: '2023-09-26', is_am: false, is_pm: true },
+      { date: '2023-09-27', is_am: true, is_pm: false },
+    ]
+  },
+  team: [
+    {
+      staffID: '1',
+      name: 'John Doe',
+      scheduleTrails: [
+        { date: '2023-09-25', is_am: true, is_pm: true },
+        { date: '2023-09-26', is_am: false, is_pm: true },
+        { date: '2023-09-27', is_am: true, is_pm: false },
+      ]
+    },
+    {
+      staffID: '2',
+      name: 'Jane Smith',
+      scheduleTrails: [
+        { date: '2023-09-25', is_am: false, is_pm: false },
+        { date: '2023-09-26', is_am: true, is_pm: true },
+      ]
+    },
+    {
+      staffID: '3',
+      name: 'Bob Johnson',
+      scheduleTrails: [
+        { date: '2023-09-27', is_am: true, is_pm: true },
+      ]
+    },
+  ]
+};
 
 const WeeklySchedule = () => {
   const [currentDate, setCurrentDate] = useState(dayjs());
   const [showSearch, setShowSearch] = useState(true);
-  const [scheduleData, setScheduleData] = useState([]);
+  const [scheduleData, setScheduleData] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
-
-  const currentStaffID = '1'; // This would normally come from a cookie or auth context
-  const currentTeamID = 'A'; // This would normally come from a cookie or auth context
+  const [selectedShift, setSelectedShift] = useState(null);
 
   const shifts = [
     { name: 'AM', time: '9:00 - 13:00' },
@@ -51,19 +65,11 @@ const WeeklySchedule = () => {
   ];
 
   useEffect(() => {
-    // Simulating database query
+    // Simulating API call to fetch schedule data
     const fetchScheduleData = () => {
-      const weekStart = currentDate.startOf('week');
-      const weekEnd = currentDate.endOf('week');
-      
-      const filteredData = mockScheduleData.filter(item => {
-        const itemDate = dayjs(item.Date);
-        return item.TeamID === currentTeamID && 
-               itemDate.isAfter(weekStart) && 
-               itemDate.isBefore(weekEnd);
-      });
-      
-      setScheduleData(filteredData);
+      // In a real application, you would make an API call here
+      // For now, we'll just use the mock data
+      setScheduleData(mockScheduleData);
     };
 
     fetchScheduleData();
@@ -88,52 +94,80 @@ const WeeklySchedule = () => {
     setCurrentDate(dayjs(newDate));
   };
 
-  const getMySchedule = (date) => {
-    const scheduleItem = scheduleData.find(item => 
-      item.StaffID === currentStaffID && item.Date === date.format('YYYY-MM-DD')
-    );
-    return scheduleItem?.Work_from_home ? 'Home' : 'Office';
+  const getMySchedule = (date, shift) => {
+    if (!scheduleData) return 'Office'; // Default to office if data isn't loaded
+
+    const dateString = date.format('YYYY-MM-DD');
+    const scheduleItem = scheduleData.staff.scheduleTrails.find(item => item.date === dateString);
+    
+    if (!scheduleItem) return 'Office'; // Default to office if no schedule found for this date
+    
+    if (shift === 'AM' && scheduleItem.is_am) return 'Home';
+    if (shift === 'PM' && scheduleItem.is_pm) return 'Home';
+    
+    return 'Office';
   };
 
-  const getTeamSchedule = (date) => {
-    const teamSchedule = scheduleData.filter(item => 
-      item.Date === date.format('YYYY-MM-DD')
-    );
-    return teamSchedule.filter(item => !item.Work_from_home).length;
+  const getTeamSchedule = (date, shift) => {
+    if (!scheduleData) return 0;
+
+    const dateString = date.format('YYYY-MM-DD');
+    return scheduleData.team.filter(member => {
+      const scheduleItem = member.scheduleTrails.find(item => item.date === dateString);
+      if (!scheduleItem) return true; // Count as in office if no schedule found
+      return shift === 'AM' ? !scheduleItem.is_am : !scheduleItem.is_pm;
+    }).length;
   };
 
-  const handleTeamScheduleClick = (date) => {
+  const handleTeamScheduleClick = (date, shift) => {
     setSelectedDate(date);
+    setSelectedShift(shift.name);
     setSidebarOpen(true);
   };
 
   const renderSidebar = () => {
-    if (!selectedDate) return null;
+    if (!selectedDate || !selectedShift || !scheduleData) return null;
 
-    const teamSchedule = scheduleData.filter(item => 
-      item.Date === selectedDate.format('YYYY-MM-DD')
-    );
+    const dateString = selectedDate.format('YYYY-MM-DD');
+    const isAM = selectedShift === 'AM';
 
-    const inOffice = teamSchedule.filter(item => !item.Work_from_home);
-    const atHome = teamSchedule.filter(item => item.Work_from_home);
+    const inOffice = scheduleData.team.filter(member => {
+      const scheduleItem = member.scheduleTrails.find(item => item.date === dateString);
+      if (!scheduleItem) return true; // Count as in office if no schedule found
+      return isAM ? !scheduleItem.is_am : !scheduleItem.is_pm;
+    });
+
+    const atHome = scheduleData.team.filter(member => {
+      const scheduleItem = member.scheduleTrails.find(item => item.date === dateString);
+      if (!scheduleItem) return false; // Don't count as at home if no schedule found
+      return isAM ? scheduleItem.is_am : scheduleItem.is_pm;
+    });
 
     return (
       <Drawer anchor="right" open={sidebarOpen} onClose={() => setSidebarOpen(false)}>
-        <Box sx={{ width: 250 }} role="presentation">
-          <h2>Team Schedule for {selectedDate.format('MMM D, YYYY')}</h2>
-          <h3>In Office:</h3>
+        <Box className="sidebar-content" role="presentation">
+          <Typography variant="h4" className="sidebar-title">
+            Team Schedule
+          </Typography>
+          <Typography variant="h5" className="sidebar-date">
+            {selectedDate.format('MMM D, YYYY')}
+          </Typography>
+          <Typography variant="subtitle1" className="sidebar-shift">
+            {selectedShift}
+          </Typography>
+          <Typography variant="h6" className="sidebar-subtitle">In Office:</Typography>
           <List>
-            {inOffice.map(item => (
-              <ListItem key={item.StaffID}>
-                <ListItemText primary={mockStaffData.find(staff => staff.StaffID === item.StaffID)?.Name} />
+            {inOffice.map(member => (
+              <ListItem key={member.staffID}>
+                <ListItemText primary={member.name} />
               </ListItem>
             ))}
           </List>
-          <h3>Working from Home:</h3>
+          <Typography variant="h6" className="sidebar-subtitle">Working from Home:</Typography>
           <List>
-            {atHome.map(item => (
-              <ListItem key={item.StaffID}>
-                <ListItemText primary={mockStaffData.find(staff => staff.StaffID === item.StaffID)?.Name} />
+            {atHome.map(member => (
+              <ListItem key={member.staffID}>
+                <ListItemText primary={member.name} />
               </ListItem>
             ))}
           </List>
@@ -170,14 +204,14 @@ const WeeklySchedule = () => {
                       <Box p={1}>
                         <b>My Schedule</b>
                         <br />
-                        <span>Working From: {getMySchedule(date)}</span>
+                        <span>Working From: {getMySchedule(date, shift.name)}</span>
                       </Box>
                     </Card>
-                    <Card className="schedule-card" onClick={() => handleTeamScheduleClick(date)}>
+                    <Card className="schedule-card" onClick={() => handleTeamScheduleClick(date, shift)}>
                       <Box p={1}>
                         <b>Team Schedule</b>
                         <br />
-                        <span>Working from Office: {getTeamSchedule(date)}</span>
+                        <span>Working from Office: {getTeamSchedule(date, shift.name)}</span>
                       </Box>
                     </Card>
                   </TableCell>
@@ -186,13 +220,12 @@ const WeeklySchedule = () => {
             ))}
           </TableBody>
           <TableFooter>
-          <TableRow>
+            <TableRow>
               <TableCell colSpan={8}>
                 <div className="footer-content">
                   <Button variant="outlined" onClick={() => setCurrentDate(dayjs())}>
                     Today
                   </Button>
-
                   <LocalizationProvider dateAdapter={AdapterDayjs}>
                     <DatePicker 
                       label={currentDate.format('MMMM YYYY')}
@@ -200,7 +233,6 @@ const WeeklySchedule = () => {
                       onChange={handleDateChange}
                     />
                   </LocalizationProvider>
-
                   {showSearch && (
                     <TextField
                       variant="outlined"
@@ -215,7 +247,6 @@ const WeeklySchedule = () => {
                       className="search-field"
                     />
                   )}
-
                   <IconButton onClick={handlePrevWeek}>
                     <ArrowBackIcon />
                   </IconButton>
