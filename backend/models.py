@@ -43,7 +43,7 @@ class WFHRequests(db.Model):
     recurrence_days = Column(String, nullable=True)  # Only for recurring, stores the day of the week (e.g. 'Monday')
     is_am = Column(Boolean, nullable=False, default=False)  # Is AM selected?
     is_pm = Column(Boolean, nullable=False, default=False)  # Is PM selected?
-    request_status = Column(Enum('Pending', 'Approved', 'Rejected', name='request_status'), nullable=False)
+    request_status = Column(Enum('Pending', 'Approved', 'Rejected', 'Cancelled', 'Withdrawn', name='request_status'), nullable=False)
     apply_date = Column(Date, nullable=False)
     withdrawable_until = Column(Date, nullable=False)
     request_reason = Column(String, nullable=True)
@@ -99,7 +99,7 @@ class RequestDecisions(db.Model):
     request_id = Column(Integer, ForeignKey('work_from_home_requests.request_id'), nullable=False)
     manager_id = Column(Integer, ForeignKey('employee.staff_id'), nullable=False)  # Manager who made the decision
     decision_date = Column(Date, nullable=False)
-    decision_status = Column(Enum('approved', 'rejected', name='decision_status'), nullable=False)
+    decision_status = Column(Enum('Approved', 'Rejected', name='decision_status'), nullable=False)
     decision_notes = Column(Text, nullable=True)
 
     work_from_home_request = db.relationship('WFHRequests')

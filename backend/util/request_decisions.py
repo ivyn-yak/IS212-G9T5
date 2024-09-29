@@ -7,7 +7,7 @@ def create_request_decision(data):
                 request_id=data["request_id"],
                 manager_id=data.get("manager_id"),
                 decision_status=data["decision_status"],
-                decision_date = datetime.today().date(),
+                decision_date = datetime.date.today(),
                 decision_notes=data["decision_notes"]
             )
 

@@ -11,7 +11,12 @@ def manager_approve_adhoc():
     data = request.get_json()
     if not data:
         return jsonify({"error": "Invalid JSON or no data provided"}), 400
-
+    
+    required_fields = ["request_id", "manager_id", "decision_status", "decision_notes"]
+    for field in required_fields:
+        if field not in data:
+            return jsonify({"error": f"Missing '{field}' in request"}), 400
+    
     try: 
         request_id = data["request_id"]
         req = get_request(request_id)
@@ -19,9 +24,11 @@ def manager_approve_adhoc():
             return jsonify({"error": "Request not found"}), 404
 
         # TO DO: head count check
+        # GET wfh requests by date and by team
+        # GET total num of ppl in the team 
 
         # update status in WFHRequests to decision
-        new_req = update_request(request_id, {"request_status": data["decision"]})
+        new_req = update_request(request_id, {"request_status": data.get("decision_status")})
         if new_req is None:
             return jsonify({"error": "Request not found"}), 404
         
@@ -31,13 +38,13 @@ def manager_approve_adhoc():
             return jsonify(decision), 500 
         
         # TO DO: populate WFHRequestDates 
-        wfh_date = add_approved_date(new_req)
+        wfh_date = add_approved_date(new_req["new_request"])
         if "error" in wfh_date:
             return jsonify(wfh_date), 500 
         
         return jsonify({"message": "Request updated and manager's decision stored successfully",
-                        "request": new_req["request"],
-                        "decision": decision.json(),
+                        "request": new_req["new_request"],
+                        "decision": decision["decision"],
                         "wfh_date": wfh_date["wfh_date"]
                         }), 201
 

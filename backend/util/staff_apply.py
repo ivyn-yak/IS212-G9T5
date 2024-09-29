@@ -25,7 +25,7 @@ def handle_adhoc_request(data):
             request_type=data['request_type'],  
             start_date=start_date,  
             end_date=date.fromisoformat(data['end_date']),
-            recurrence_days=data.get('recurrence_days', ''),
+            recurrence_days=data.get('recurrence_days', None),
             is_am=data['is_am'],
             is_pm=data['is_pm'], 
             request_status= "Pending",  
