@@ -34,12 +34,6 @@
   .schedule-card {
     width: 100%;
     margin: 10px 0;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-  }
-  
-  .schedule-card:hover {
-    background-color: #f5f5f5;
   }
   
   /* Sidebar Styles */
@@ -80,4 +74,22 @@
   
   .MuiListItemText-primary {
     font-size: 14px;
+  }
+
+  .highlighted {
+    background-color: #e8f5e9 !important;
+  }
+
+  .team-schedule-card {
+    height: 100%;  /* Make all cards the same height */
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+
+  .team-schedule-card:hover {
+    background-color: #f0f0f0 !important;
+  }
+
+  .highlight-text {
+    flex-shrink: 0;  /* Prevent this text from shrinking */
   }
