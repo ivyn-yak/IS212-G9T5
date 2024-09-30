@@ -6,6 +6,7 @@ import DeptView from './pages/HrView/DeptView';
 import HrCalendar from './pages/HrView/HrCalendar';
 import Sidebar from './components/sidebar/sidebar';
 import Navbar from './components/navbar/navbar';
+import ManageerViewTeamSchedule from './pages/ManagerViewTeamSchedule';
 import { useLocation } from 'react-router-dom';
 import './App.css';
 
@@ -19,9 +20,10 @@ function App() {
           <div className="content-area">
             <Routes>
               <Route path="/" element={<Home />} />
-              <Route path="/staff/view-schedule" element={<StaffViewSchedule />} />
               <Route path="/hr/dept-view" element={<DeptView />} />
               <Route path="/hr/hr-calendar" element={<HrCalendar />} />
+              <Route path="/:staffId/Staff/Schedule" element={<StaffViewSchedule />} />
+              <Route path="/:staffId/Manager/Schedule" element={<ManageerViewTeamSchedule />} />
             </Routes>
           </div>
         </div>

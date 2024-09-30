@@ -30,8 +30,66 @@
   .search-field {
     width: 200px;
   }
-
+  
   .schedule-card {
     width: 100%;
     margin: 10px 0;
+  }
+  
+  /* Sidebar Styles */
+  .sidebar-content {
+    width: 300px;
+    padding: 20px;
+  }
+  
+  .sidebar-title {
+    margin-bottom: 10px;
+    color: #333;
+  }
+  
+  .sidebar-date {
+    margin-bottom: 5px;
+    color: #666;
+  }
+  
+  .sidebar-shift {
+    margin-bottom: 20px;
+    color: #999;
+  }
+  
+  .sidebar-subtitle {
+    margin-top: 20px;
+    margin-bottom: 10px;
+    color: #444;
+  }
+  
+  /* List Styles */
+  .MuiList-root {
+    padding: 0;
+  }
+  
+  .MuiListItem-root {
+    padding: 8px 0;
+  }
+  
+  .MuiListItemText-primary {
+    font-size: 14px;
+  }
+
+  .highlighted {
+    background-color: #e8f5e9 !important;
+  }
+
+  .team-schedule-card {
+    height: 100%;  /* Make all cards the same height */
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+
+  .team-schedule-card:hover {
+    background-color: #f0f0f0 !important;
+  }
+
+  .highlight-text {
+    flex-shrink: 0;  /* Prevent this text from shrinking */
   }

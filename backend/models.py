@@ -36,23 +36,25 @@ class WFHRequests(db.Model):
 
     request_id = Column(Integer, primary_key=True)
     staff_id = Column(Integer, ForeignKey('employee.staff_id'), nullable=False)
+    manager_id = Column(Integer, ForeignKey('employee.staff_id'), nullable=False)
     request_type = Column(Enum('Ad-hoc', 'Recurring', name='request_type'), nullable=False)  # Ad-hoc or Recurring
     start_date = Column(Date, nullable=False)  
     end_date = Column(Date, nullable=False)    
     recurrence_days = Column(String, nullable=True)  # Only for recurring, stores the day of the week (e.g. 'Monday')
     is_am = Column(Boolean, nullable=False, default=False)  # Is AM selected?
     is_pm = Column(Boolean, nullable=False, default=False)  # Is PM selected?
-    request_status = Column(Enum('Pending', 'Approved', 'Rejected', name='request_status'), nullable=False)
+    request_status = Column(Enum('Pending', 'Approved', 'Rejected', 'Cancelled', 'Withdrawn', name='request_status'), nullable=False)
     apply_date = Column(Date, nullable=False)
     withdrawable_until = Column(Date, nullable=False)
     request_reason = Column(String, nullable=True)
 
-    employee = db.relationship('Employee')
+    employee = db.relationship('Employee', foreign_keys=[staff_id])
 
     def json(self):
         return {
             "request_id": self.request_id,
             "staff_id": self.staff_id,
+            "manager_id": self.manager_id,
             "request_type": self.request_type,
             "start_date": str(self.start_date),
             "end_date": str(self.end_date),
@@ -97,7 +99,7 @@ class RequestDecisions(db.Model):
     request_id = Column(Integer, ForeignKey('work_from_home_requests.request_id'), nullable=False)
     manager_id = Column(Integer, ForeignKey('employee.staff_id'), nullable=False)  # Manager who made the decision
     decision_date = Column(Date, nullable=False)
-    decision_status = Column(Enum('approved', 'rejected', name='decision_status'), nullable=False)
+    decision_status = Column(Enum('Approved', 'Rejected', name='decision_status'), nullable=False)
     decision_notes = Column(Text, nullable=True)
 
     work_from_home_request = db.relationship('WFHRequests')

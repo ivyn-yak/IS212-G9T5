@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import { 
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TableFooter,
-  Paper, Button, TextField, IconButton, InputAdornment, Box, Drawer, List, ListItem, ListItemText
+  Paper, Button, TextField, IconButton, InputAdornment, Box, Drawer, List, ListItem, ListItemText,
+  Typography
 } from '@mui/material';
 import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
@@ -12,128 +14,220 @@ import SearchIcon from '@mui/icons-material/Search';
 import Card from '@mui/material/Card';
 import './WeeklyCalendar.css';
 
-// Mock data
-const mockScheduleData = [
-  { StaffID: '1', TeamID: 'A', Date: '2023-09-25', Work_from_home: true },
-  { StaffID: '2', TeamID: 'A', Date: '2023-09-25', Work_from_home: false },
-  { StaffID: '3', TeamID: 'A', Date: '2023-09-25', Work_from_home: true },
-  { StaffID: '4', TeamID: 'A', Date: '2023-09-26', Work_from_home: false },
-  { StaffID: '1', TeamID: 'A', Date: '2023-09-26', Work_from_home: false },
-  { StaffID: '2', TeamID: 'A', Date: '2023-09-26', Work_from_home: false },
-  { StaffID: '3', TeamID: 'A', Date: '2023-09-26', Work_from_home: true },
-  { StaffID: '4', TeamID: 'A', Date: '2023-09-27', Work_from_home: true },
-  { StaffID: '1', TeamID: 'A', Date: '2023-09-27', Work_from_home: true },
-  { StaffID: '2', TeamID: 'A', Date: '2023-09-27', Work_from_home: false },
-  { StaffID: '3', TeamID: 'A', Date: '2023-09-27', Work_from_home: false },
-  { StaffID: '4', TeamID: 'A', Date: '2023-09-25', Work_from_home: false },
-];
-
-const mockStaffData = [
-  { StaffID: '1', Name: 'John Doe' },
-  { StaffID: '2', Name: 'Jane Smith' },
-  { StaffID: '3', Name: 'Bob Johnson' },
-  { StaffID: '4', Name: 'Alice Brown' },
-];
+// Mock API function
+const fetchScheduleData = async (staffId, startDate, endDate) => {
+  console.log(`Fetching data for staffId: ${staffId}, startDate: ${startDate}, endDate: ${endDate}`);
+  // Return mock data for September 25-27, 2024
+  return {
+    staff: {
+      staffID: staffId,
+      scheduleTrails: [
+        { date: '2024-09-25', is_am: true, is_pm: true },
+        { date: '2024-09-26', is_am: false, is_pm: true },
+        { date: '2024-09-27', is_am: true, is_pm: false },
+      ]
+    },
+    team: [
+      {
+        staffID: '1',
+        name: 'John Doe',
+        scheduleTrails: [
+          { date: '2024-09-25', is_am: true, is_pm: true },
+          { date: '2024-09-26', is_am: false, is_pm: true },
+          { date: '2024-09-27', is_am: true, is_pm: false },
+        ]
+      },
+      {
+        staffID: '2',
+        name: 'Jane Smith',
+        scheduleTrails: [
+          { date: '2024-09-25', is_am: false, is_pm: false },
+          { date: '2024-09-26', is_am: true, is_pm: true },
+        ]
+      },
+      {
+        staffID: '3',
+        name: 'Bob Johnson',
+        scheduleTrails: [
+          { date: '2024-09-27', is_am: true, is_pm: true },
+        ]
+      },
+    ]
+  };
+};
 
 const WeeklySchedule = () => {
-  const [currentDate, setCurrentDate] = useState(dayjs());
-  const [showSearch, setShowSearch] = useState(true);
-  const [scheduleData, setScheduleData] = useState([]);
+  const { staffId } = useParams();
+  const [selectedWeekStart, setSelectedWeekStart] = useState(dayjs().startOf('week'));
+  const [scheduleData, setScheduleData] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
-
-  const currentStaffID = '1'; // This would normally come from a cookie or auth context
-  const currentTeamID = 'A'; // This would normally come from a cookie or auth context
+  const [selectedShift, setSelectedShift] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [highlightedStaffId, setHighlightedStaffId] = useState(null);
 
   const shifts = [
     { name: 'AM', time: '9:00 - 13:00' },
     { name: 'PM', time: '14:00 - 18:00' }
   ];
-
+  
   useEffect(() => {
-    // Simulating database query
-    const fetchScheduleData = () => {
-      const weekStart = currentDate.startOf('week');
-      const weekEnd = currentDate.endOf('week');
-      
-      const filteredData = mockScheduleData.filter(item => {
-        const itemDate = dayjs(item.Date);
-        return item.TeamID === currentTeamID && 
-               itemDate.isAfter(weekStart) && 
-               itemDate.isBefore(weekEnd);
-      });
-      
-      setScheduleData(filteredData);
+    const fetchData = async () => {
+      const startOfWeek = selectedWeekStart.format('YYYY-MM-DD');
+      const endOfWeek = selectedWeekStart.endOf('week').format('YYYY-MM-DD');
+      const data = await fetchScheduleData(staffId, startOfWeek, endOfWeek);
+      console.log('Fetched schedule data:', data);
+      setScheduleData(data);
     };
 
-    fetchScheduleData();
-  }, [currentDate]);
+    fetchData();
+  }, [staffId, selectedWeekStart]);
 
   const getWeekDates = (date) => {
-    const startOfWeek = date.startOf('week');
-    return Array.from({ length: 7 }, (_, i) => startOfWeek.add(i, 'day'));
+    return Array.from({ length: 7 }, (_, i) => date.add(i, 'day'));
   };
 
-  const weekDates = getWeekDates(currentDate);
+  const weekDates = getWeekDates(selectedWeekStart);
 
   const handlePrevWeek = () => {
-    setCurrentDate(currentDate.subtract(1, 'week'));
+    setSelectedWeekStart(selectedWeekStart.subtract(1, 'week'));
   };
 
   const handleNextWeek = () => {
-    setCurrentDate(currentDate.add(1, 'week'));
+    setSelectedWeekStart(selectedWeekStart.add(1, 'week'));
   };
 
   const handleDateChange = (newDate) => {
-    setCurrentDate(dayjs(newDate));
+    setSelectedWeekStart(dayjs(newDate).startOf('week'));
   };
 
-  const getMySchedule = (date) => {
-    const scheduleItem = scheduleData.find(item => 
-      item.StaffID === currentStaffID && item.Date === date.format('YYYY-MM-DD')
-    );
-    return scheduleItem?.Work_from_home ? 'Home' : 'Office';
+  const handleTodayClick = () => {
+    setSelectedWeekStart(dayjs().startOf('week'));
   };
 
-  const getTeamSchedule = (date) => {
-    const teamSchedule = scheduleData.filter(item => 
-      item.Date === date.format('YYYY-MM-DD')
-    );
-    return teamSchedule.filter(item => !item.Work_from_home).length;
+  const getMySchedule = (date, shift) => {
+    console.log(`Getting schedule for date: ${date.format('YYYY-MM-DD')}, shift: ${shift}`);
+    if (!scheduleData) {
+      console.log('Schedule data not loaded yet');
+      return 'Office'; // Default to office if data isn't loaded
+    }
+
+    const dateString = date.format('YYYY-MM-DD');
+    console.log('Looking for schedule item with date:', dateString);
+    console.log('Available schedule trails:', scheduleData.staff.scheduleTrails);
+
+    const scheduleItem = scheduleData.staff.scheduleTrails.find(item => item.date === dateString);
+    
+    console.log('Schedule item found:', scheduleItem);
+
+    if (!scheduleItem) {
+      console.log('No schedule item found for this date, defaulting to Office');
+      return 'Office'; // Default to office if no schedule found for this date
+    }
+    
+    if (shift === 'AM' && scheduleItem.is_am) {
+      console.log('AM shift and is_am is true, returning Home');
+      return 'Home';
+    }
+    if (shift === 'PM' && scheduleItem.is_pm) {
+      console.log('PM shift and is_pm is true, returning Home');
+      return 'Home';
+    }
+    
+    console.log('Defaulting to Office');
+    return 'Office';
   };
 
-  const handleTeamScheduleClick = (date) => {
+  const handleSearchChange = (event) => {
+    const newSearchTerm = event.target.value;
+    setSearchTerm(newSearchTerm);
+    
+    if (newSearchTerm.trim() === '') {
+      setHighlightedStaffId(null);  // Clear highlight when search is empty
+    } else {
+      const foundStaff = scheduleData?.team.find(
+        staff => staff.name.toLowerCase().includes(newSearchTerm.toLowerCase())
+      );
+      setHighlightedStaffId(foundStaff ? foundStaff.staffID : null);
+    }
+  };
+
+  const getTeamSchedule = (date, shift) => {
+    if (!scheduleData) return { inOffice: 0, atHome: 0 };
+
+    const dateString = date.format('YYYY-MM-DD');
+    const inOffice = scheduleData.team.filter(member => {
+      const scheduleItem = member.scheduleTrails.find(item => item.date === dateString);
+      if (!scheduleItem) return true; // Count as in office if no schedule found
+      return shift === 'AM' ? !scheduleItem.is_am : !scheduleItem.is_pm;
+    });
+    const atHome = scheduleData.team.filter(member => {
+      const scheduleItem = member.scheduleTrails.find(item => item.date === dateString);
+      if (!scheduleItem) return false; // Don't count as at home if no schedule found
+      return shift === 'AM' ? scheduleItem.is_am : scheduleItem.is_pm;
+    });
+    return { inOffice: inOffice.length, atHome: atHome.length };
+  };
+
+  const isHighlightedStaffAtHome = (date, shift) => {
+    if (!highlightedStaffId || !scheduleData) return false;
+    const staff = scheduleData.team.find(s => s.staffID === highlightedStaffId);
+    if (!staff) return false;
+    const dateString = date.format('YYYY-MM-DD');
+    const scheduleItem = staff.scheduleTrails.find(item => item.date === dateString);
+    if (!scheduleItem) return false;
+    return shift === 'AM' ? scheduleItem.is_am : scheduleItem.is_pm;
+  };
+
+  const handleTeamScheduleClick = (date, shift) => {
     setSelectedDate(date);
+    setSelectedShift(shift.name);
     setSidebarOpen(true);
   };
 
   const renderSidebar = () => {
-    if (!selectedDate) return null;
+    if (!selectedDate || !selectedShift || !scheduleData) return null;
 
-    const teamSchedule = scheduleData.filter(item => 
-      item.Date === selectedDate.format('YYYY-MM-DD')
-    );
+    const dateString = selectedDate.format('YYYY-MM-DD');
+    const isAM = selectedShift === 'AM';
 
-    const inOffice = teamSchedule.filter(item => !item.Work_from_home);
-    const atHome = teamSchedule.filter(item => item.Work_from_home);
+    const inOffice = scheduleData.team.filter(member => {
+      const scheduleItem = member.scheduleTrails.find(item => item.date === dateString);
+      if (!scheduleItem) return true; // Count as in office if no schedule found
+      return isAM ? !scheduleItem.is_am : !scheduleItem.is_pm;
+    });
+
+    const atHome = scheduleData.team.filter(member => {
+      const scheduleItem = member.scheduleTrails.find(item => item.date === dateString);
+      if (!scheduleItem) return false; // Don't count as at home if no schedule found
+      return isAM ? scheduleItem.is_am : scheduleItem.is_pm;
+    });
 
     return (
       <Drawer anchor="right" open={sidebarOpen} onClose={() => setSidebarOpen(false)}>
-        <Box sx={{ width: 250 }} role="presentation">
-          <h2>Team Schedule for {selectedDate.format('MMM D, YYYY')}</h2>
-          <h3>In Office:</h3>
+        <Box className="sidebar-content" role="presentation">
+          <Typography variant="h4" className="sidebar-title">
+            Team Schedule
+          </Typography>
+          <Typography variant="h5" className="sidebar-date">
+            {selectedDate.format('MMM D, YYYY')}
+          </Typography>
+          <Typography variant="subtitle1" className="sidebar-shift">
+            {selectedShift}
+          </Typography>
+          <Typography variant="h6" className="sidebar-subtitle">In Office:</Typography>
           <List>
-            {inOffice.map(item => (
-              <ListItem key={item.StaffID}>
-                <ListItemText primary={mockStaffData.find(staff => staff.StaffID === item.StaffID)?.Name} />
+            {inOffice.map(member => (
+              <ListItem key={member.staffID} style={{ backgroundColor: member.staffID === highlightedStaffId ? '#e8f5e9' : 'transparent' }}>
+                <ListItemText primary={member.name} />
               </ListItem>
             ))}
           </List>
-          <h3>Working from Home:</h3>
+          <Typography variant="h6" className="sidebar-subtitle">Working from Home:</Typography>
           <List>
-            {atHome.map(item => (
-              <ListItem key={item.StaffID}>
-                <ListItemText primary={mockStaffData.find(staff => staff.StaffID === item.StaffID)?.Name} />
+            {atHome.map(member => (
+              <ListItem key={member.staffID} style={{ backgroundColor: member.staffID === highlightedStaffId ? '#e8f5e9' : 'transparent' }}>
+                <ListItemText primary={member.name} />
               </ListItem>
             ))}
           </List>
@@ -164,58 +258,76 @@ const WeeklySchedule = () => {
                   <br />
                   ({shift.time})
                 </TableCell>
-                {weekDates.map((date) => (
-                  <TableCell key={`${date.format('YYYY-MM-DD')}-${shift.name}`}>
-                    <Card className="schedule-card">
-                      <Box p={1}>
-                        <b>My Schedule</b>
-                        <br />
-                        <span>Working From: {getMySchedule(date)}</span>
-                      </Box>
-                    </Card>
-                    <Card className="schedule-card" onClick={() => handleTeamScheduleClick(date)}>
-                      <Box p={1}>
-                        <b>Team Schedule</b>
-                        <br />
-                        <span>Working from Office: {getTeamSchedule(date)}</span>
-                      </Box>
-                    </Card>
-                  </TableCell>
-                ))}
+                {weekDates.map((date) => {
+                  const { inOffice, atHome } = getTeamSchedule(date, shift.name);
+                  const isHighlighted = highlightedStaffId && isHighlightedStaffAtHome(date, shift.name);                  return (
+                    <TableCell key={`${date.format('YYYY-MM-DD')}-${shift.name}`}>
+                      <Card className="schedule-card">
+                        <Box p={1}>
+                          <b>My Schedule</b>
+                          <br />
+                          <span>Working From: {getMySchedule(date, shift.name)}</span>
+                        </Box>
+                      </Card>
+                      <Card 
+                         className={`schedule-card team-schedule-card ${isHighlighted ? 'highlighted' : ''}`} 
+                        onClick={() => handleTeamScheduleClick(date, shift)}
+                        style={{ backgroundColor: isHighlighted ? '#e8f5e9' : 'transparent' }}
+                      >
+                        <Box p={1}>
+                          <b>Team Schedule</b>
+                          <br />
+                          <span>Working from Office: {inOffice}</span>
+                          <br />
+                          <span>Working from Home: {atHome}</span> <br />
+                          <Typography 
+                            variant="caption" 
+                            className="highlight-text"
+                            style={{ 
+                              color: 'green', 
+                              visibility: isHighlighted ? 'visible' : 'hidden',
+                              height: '1.2em',  // Reduced height
+                              marginTop: '2px'
+                            }}
+                          >
+                            Highlighted staff Working from Home
+                          </Typography>
+                        </Box>
+                      </Card>
+                    </TableCell>
+                  );
+                })}
               </TableRow>
             ))}
           </TableBody>
           <TableFooter>
-          <TableRow>
+            <TableRow>
               <TableCell colSpan={8}>
                 <div className="footer-content">
-                  <Button variant="outlined" onClick={() => setCurrentDate(dayjs())}>
+                  <Button variant="outlined" onClick={handleTodayClick}>
                     Today
                   </Button>
-
                   <LocalizationProvider dateAdapter={AdapterDayjs}>
                     <DatePicker 
-                      label={currentDate.format('MMMM YYYY')}
-                      value={currentDate}
+                      label={selectedWeekStart.format('MMMM YYYY')}
+                      value={selectedWeekStart}
                       onChange={handleDateChange}
                     />
                   </LocalizationProvider>
-
-                  {showSearch && (
-                    <TextField
-                      variant="outlined"
-                      placeholder="Search..."
-                      InputProps={{
-                        startAdornment: (
-                          <InputAdornment position="start">
-                            <SearchIcon />
-                          </InputAdornment>
-                        ),
-                      }}
-                      className="search-field"
-                    />
-                  )}
-
+                  <TextField
+                    variant="outlined"
+                    placeholder="Search staff..."
+                    value={searchTerm}
+                    onChange={handleSearchChange}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <SearchIcon />
+                        </InputAdornment>
+                      ),
+                    }}
+                    className="search-field"
+                  />
                   <IconButton onClick={handlePrevWeek}>
                     <ArrowBackIcon />
                   </IconButton>
