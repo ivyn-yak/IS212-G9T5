@@ -270,7 +270,7 @@ const WeeklySchedule = () => {
                         </Box>
                       </Card>
                       <Card 
-                        className="schedule-card" 
+                         className={`schedule-card team-schedule-card ${isHighlighted ? 'highlighted' : ''}`} 
                         onClick={() => handleTeamScheduleClick(date, shift)}
                         style={{ backgroundColor: isHighlighted ? '#e8f5e9' : 'transparent' }}
                       >
