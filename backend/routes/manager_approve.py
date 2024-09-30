@@ -53,11 +53,15 @@ def manager_approve_adhoc():
         if ratio > 0.5:
             return jsonify({"error": "Exceed 0.5 rule limit"}), 422
 
+        # print(f"Calling update_request with request_id: {request_id}")
         new_req = update_request(request_id, {"request_status": data.get("decision_status")})
+        # print(f"update_request returned: {new_req}")
         if new_req is None:
             return jsonify({"error": "Request not found"}), 404
-        
+
+        # print(f"Calling create_request_decision with data: {data}")
         decision = create_request_decision(data)
+        # print(f"create_request_decision returned: {decision}")
         if "error" in decision:
             return jsonify(decision), 500
         
