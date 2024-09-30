@@ -1,6 +1,8 @@
 from flask import Blueprint, jsonify, request
 from models import *
 from datetime import datetime, timedelta
+from util.employee import get_full_team, get_employee_by_id
+
 
 dates = Blueprint('dates', __name__)
 
@@ -142,3 +144,114 @@ def get_staff_wfh_and_office_dates_in_range(staff_id):
         "wfh_dates": [wfh.json() for wfh in wfh_dates],
         "in_office_dates": in_office_days
     })
+
+# Get the WFH schedule for a staff member and their team for a given week
+# GET /api/staff/<int:staff_id>/team_wfh_schedule?start_week_date=2024-09-01
+@dates.route("/api/staff/<int:staff_id>/team_wfh_schedule", methods=["GET"])
+def get_staff_and_team_wfh_schedule(staff_id):
+    start_week_date = request.args.get('start_week_date')
+    if not start_week_date:
+        return jsonify({"error": "Please provide start_week_date"}), 400
+
+    # Calculate end date (7 days after start)
+    start_date = datetime.strptime(start_week_date, '%Y-%m-%d')
+    end_date = start_date + timedelta(days=6)
+
+    # Get the staff and their team
+    employee = get_employee_by_id(staff_id)
+    if not employee:  # Check if employee exists
+        return jsonify({"error": "Employee not found"}), 404
+
+    # Manually extract properties from the returned dictionary
+    reporting_manager = employee.get("reporting_manager")
+    role = employee.get("role")
+
+    # Determine the correct staff ID for full_team based on role
+    full_team = get_full_team(reporting_manager if role == 2 else staff_id)
+
+    # Prepare the response structure
+    schedule_response = {"staff": {}, "team": []}
+
+    # Function to get WFH dates for a staff member
+    def get_wfh_schedule(staff_id):
+        wfh_dates = WFHRequestDates.query.filter(
+            WFHRequestDates.staff_id == staff_id,
+            WFHRequestDates.specific_date >= start_date,
+            WFHRequestDates.specific_date <= end_date
+        ).all()
+        return [date.json() for date in wfh_dates]
+
+    # Get the schedule for the main staff
+    schedule_response["staff"] = {
+        "staff_id": staff_id,  # Use original staff_id from input
+        "ScheduleDetails": get_wfh_schedule(staff_id)
+    }
+
+    # Get the schedule for the team
+    for member in full_team:
+        schedule_response["team"].append({
+            "staff_id": member.staff_id,
+            "ScheduleDetails": get_wfh_schedule(member.staff_id)
+        })
+
+    return jsonify(schedule_response)
+
+
+
+# Get department schedules for a given week
+# GET /api/departments/schedules?start_week_date=2024-09-01
+@dates.route("/api/departments/schedules", methods=["GET"])
+def get_department_schedules():
+    start_week_date = request.args.get('start_week_date')
+    if not start_week_date:
+        return jsonify({"error": "Please provide start_week_date"}), 400
+    
+    start_date = datetime.strptime(start_week_date, '%Y-%m-%d')
+    end_date = start_date + timedelta(days=6)
+
+    # Query all departments
+    departments = Employee.query.distinct(Employee.dept).all()
+    department_response = []
+
+    # Function to get WFH dates for a staff member
+    def get_wfh_schedule(staff_id):
+        wfh_dates = WFHRequestDates.query.filter(
+            WFHRequestDates.staff_id == staff_id,
+            WFHRequestDates.specific_date >= start_date,
+            WFHRequestDates.specific_date <= end_date
+        ).all()
+        return [date.json() for date in wfh_dates]
+
+    # Iterate through each department
+    for department in departments:
+        department_name = department.dept
+
+        # Get all staff in the department
+        department_staff = Employee.query.filter_by(dept=department_name).all()
+
+        # Group staff by their teams
+        teams_dict = {}
+        for staff in department_staff:
+            rm_id = staff.reporting_manager if staff.role == 2 else staff.staff_id
+            if rm_id not in teams_dict:
+                teams_dict[rm_id] = []
+
+            teams_dict[rm_id].append(staff)
+
+        # Prepare teams' schedules
+        teams = []
+        for rm_id, team_members in teams_dict.items():
+            team_schedule = []
+            for member in team_members:
+                team_schedule.append({
+                    "staff_id": member.staff_id,
+                    "ScheduleDetails": get_wfh_schedule(member.staff_id)
+                })
+            teams.append(team_schedule)
+
+        department_response.append({
+            "department_name": department_name,
+            "teams": teams
+        })
+
+    return jsonify(department_response)
