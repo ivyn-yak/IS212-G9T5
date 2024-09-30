@@ -139,11 +139,17 @@ const WeeklySchedule = () => {
   };
 
   const handleSearchChange = (event) => {
-    setSearchTerm(event.target.value);
-    const foundStaff = scheduleData?.team.find(
-      staff => staff.name.toLowerCase().includes(event.target.value.toLowerCase())
-    );
-    setHighlightedStaffId(foundStaff ? foundStaff.staffID : null);
+    const newSearchTerm = event.target.value;
+    setSearchTerm(newSearchTerm);
+    
+    if (newSearchTerm.trim() === '') {
+      setHighlightedStaffId(null);  // Clear highlight when search is empty
+    } else {
+      const foundStaff = scheduleData?.team.find(
+        staff => staff.name.toLowerCase().includes(newSearchTerm.toLowerCase())
+      );
+      setHighlightedStaffId(foundStaff ? foundStaff.staffID : null);
+    }
   };
 
   const getTeamSchedule = (date, shift) => {
@@ -254,8 +260,7 @@ const WeeklySchedule = () => {
                 </TableCell>
                 {weekDates.map((date) => {
                   const { inOffice, atHome } = getTeamSchedule(date, shift.name);
-                  const isHighlighted = isHighlightedStaffAtHome(date, shift.name);
-                  return (
+                  const isHighlighted = highlightedStaffId && isHighlightedStaffAtHome(date, shift.name);                  return (
                     <TableCell key={`${date.format('YYYY-MM-DD')}-${shift.name}`}>
                       <Card className="schedule-card">
                         <Box p={1}>
@@ -274,7 +279,19 @@ const WeeklySchedule = () => {
                           <br />
                           <span>Working from Office: {inOffice}</span>
                           <br />
-                          <span>Working from Home: {atHome}</span>
+                          <span>Working from Home: {atHome}</span> <br />
+                          <Typography 
+                            variant="caption" 
+                            className="highlight-text"
+                            style={{ 
+                              color: 'green', 
+                              visibility: isHighlighted ? 'visible' : 'hidden',
+                              height: '1.2em',  // Reduced height
+                              marginTop: '2px'
+                            }}
+                          >
+                            Highlighted staff Working from Home
+                          </Typography>
                         </Box>
                       </Card>
                     </TableCell>

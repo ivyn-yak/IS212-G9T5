@@ -85,3 +85,18 @@
   .highlighted {
     background-color: #e8f5e9 !important;
   }
+
+  .team-schedule-card {
+    height: 100%;  /* Make all cards the same height */
+  }
+  
+  .team-schedule-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+  }
+  
+  .highlight-text {
+    flex-shrink: 0;  /* Prevent this text from shrinking */
+  }
