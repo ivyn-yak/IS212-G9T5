@@ -81,3 +81,7 @@
   .MuiListItemText-primary {
     font-size: 14px;
   }
+
+  .highlighted {
+    background-color: #e8f5e9 !important;
+  }
