@@ -96,8 +96,6 @@ class TestManagerApproveAdhoc(TestApp):
     def test_approve_adhoc_request_not_found(self):
         request_body = {
             'request_id': 999, 
-            'request_type': 'Ad-hoc',
-            'staff_id': 140008,
             'manager_id': 140001,
             'start_date': datetime.strptime("2024-09-15", '%Y-%m-%d').isoformat(),
             'end_date': datetime.strptime("2024-09-20", '%Y-%m-%d').isoformat(),
@@ -129,9 +127,7 @@ class TestManagerApproveAdhoc(TestApp):
 
         request_body = {
             'request_id': 1,
-            'request_type': 'Ad-hoc',
-            'staff_id': 140008,
-            'decision_status': 'approved',
+            'decision_status': 'Approved',
             'start_date': '2024-09-15',  
             'decision_notes': 'Nil',
             'manager_id': 140001
@@ -211,8 +207,6 @@ class TestManagerApproveAdhoc(TestApp):
 
         request_body = {
             'request_id': 4,
-            'request_type': 'Ad-hoc',
-            'staff_id': 140009,
             'decision': 'Approved',
             'start_date': '2024-09-15',  
         }
@@ -294,9 +288,7 @@ class TestManagerApproveAdhoc(TestApp):
 
         request_body = {
             'request_id': 4,
-            'request_type': 'Ad-hoc',
-            'staff_id': 140009,
-            'decision_status': 'approved',
+            'decision_status': 'Approved',
             'start_date': '2024-09-15',  
             'decision_notes': 'Nil',
             'manager_id': 140001

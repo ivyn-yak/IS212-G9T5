@@ -19,10 +19,10 @@ def manager_approve_adhoc():
         if not req:
             return jsonify({"error": "Request not found"}), 404
 
-        if data["request_type"] != 'Ad-hoc':
-            return jsonify({"error": "Invalid request type"}), 400
+        # if data["request_type"] != 'Ad-hoc':
+        #     return jsonify({"error": "Invalid request type"}), 400
         
-        staff_id = data["staff_id"]
+        staff_id = req["staff_id"]
         employee = Employee.query.filter_by(staff_id=staff_id).first()
         if not employee: 
             return jsonify({"error": f"Employee with staff_id {staff_id} not found"}), 404
@@ -34,7 +34,7 @@ def manager_approve_adhoc():
         employees_under_same_manager = Employee.query.filter_by(reporting_manager=reporting_manager_id).all()
         total_employees = len(employees_under_same_manager)
         
-        start_date = data["start_date"]
+        start_date = req["start_date"]
 
         approved_adhoc_requests = WFHRequests.query.filter(
             and_(
@@ -50,14 +50,21 @@ def manager_approve_adhoc():
         else:
             ratio = 0
 
+        # print(ratio)
+
         if ratio > 0.5:
             return jsonify({"error": "Exceed 0.5 rule limit"}), 422
+        
 
+        # print(f"Calling update_request with request_id: {request_id}")
         new_req = update_request(request_id, {"request_status": data.get("decision_status")})
+        # print(f"update_request returned: {new_req}")
         if new_req is None:
             return jsonify({"error": "Request not found"}), 404
-        
+
+        # print(f"Calling create_request_decision with data: {data}")
         decision = create_request_decision(data)
+        # print(f"create_request_decision returned: {decision}")
         if "error" in decision:
             return jsonify(decision), 500
         
