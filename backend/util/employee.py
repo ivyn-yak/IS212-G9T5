@@ -22,3 +22,22 @@ def get_full_team(rm_id):
         ids += [employee.staff_id for employee in subteam if employee.role != 2]
 
     return full_team
+
+def get_all_department_teams():
+    all_employees = Employee.query.all()
+
+    department_teams = {}
+
+    for employee in all_employees:
+        department = employee.dept
+        reporting_manager = employee.reporting_manager 
+
+        if department not in department_teams:
+            department_teams[department] = {}
+        
+        if reporting_manager and reporting_manager not in department_teams[department]:
+            team = get_full_team(reporting_manager)
+            department_teams[department][reporting_manager] = [member.json() for member in team]
+            
+    
+    return department_teams
