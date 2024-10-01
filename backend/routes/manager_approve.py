@@ -50,7 +50,7 @@ def manager_approve_adhoc():
         else:
             ratio = 0
 
-        print(ratio)
+        # print(ratio)
 
         if ratio > 0.5:
             return jsonify({"error": "Exceed 0.5 rule limit"}), 422
