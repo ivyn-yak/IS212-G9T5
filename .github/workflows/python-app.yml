@@ -5,9 +5,9 @@ name: Python application
 
 on:
   push:
-    branches: [ "ivyn/ci" ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ "ivyn/ci" ]
+    branches: [ "main" ]
 
 permissions:
   contents: read
