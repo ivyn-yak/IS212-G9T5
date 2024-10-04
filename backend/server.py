@@ -8,17 +8,15 @@ from routes.employee import employee
 from routes.wfh_dates import dates
 from routes.staff_apply import apply
 from routes.manager_approve import approve
+from werkzeug.middleware.dispatcher import DispatcherMiddleware
 
 load_dotenv()
 
 app = Flask(__name__)
 
-if __name__ == '__main__':
-    DATABASE_URL = os.getenv("DATABASE_URL")
-    app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-else:
-    app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite://"
+DATABASE_URL = os.getenv("DATABASE_URL") if os.getenv("DATABASE_URL") else "sqlite://"
+app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
 
@@ -30,5 +28,11 @@ app.register_blueprint(dates)
 app.register_blueprint(apply)
 app.register_blueprint(approve)
 
+# Apply DispatcherMiddleware
+application = DispatcherMiddleware(app, {
+    '/api': app
+})
+
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5001, debug=True)
+    from werkzeug.serving import run_simple
+    run_simple('0.0.0.0', 5001, application, use_reloader=True, use_debugger=True)
