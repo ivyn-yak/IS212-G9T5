@@ -14,6 +14,12 @@
     "routes": [
       { "src": "/api/(.*)", "dest": "backend/server.py" },
       { "src": "/(.*)", "dest": "frontend/dist/$1" }
-    ]
+    ],
+    "functions": {
+          "api/**": {
+            "maxDuration": 10,
+            "memory": 3008
+          }
+        }
   }
   
