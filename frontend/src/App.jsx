@@ -9,6 +9,7 @@ import Navbar from './components/navbar/navbar';
 import ManageerViewTeamSchedule from './pages/ManagerViewTeamSchedule';
 import { useLocation } from 'react-router-dom';
 import './App.css';
+import RequestsView from './pages/RequestsView';
 
 function App() {
   return (
@@ -24,6 +25,8 @@ function App() {
               <Route path="/hr/hr-calendar" element={<HrCalendar />} />
               <Route path="/:staffId/Staff/Schedule" element={<StaffViewSchedule />} />
               <Route path="/:staffId/Manager/Schedule" element={<ManageerViewTeamSchedule />} />
+              <Route path="/:staffId/Staff/Application/Requests" element={<RequestsView />} />
+              <Route path="*" element={<div>404 Not Found</div>} />
             </Routes>
           </div>
         </div>
