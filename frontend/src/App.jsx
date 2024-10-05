@@ -10,6 +10,7 @@ import ManageerViewTeamSchedule from './pages/ManagerViewTeamSchedule';
 import WithdrawalFormView from './pages/WithdrawalFormView';
 import { useLocation } from 'react-router-dom';
 import './App.css';
+import RequestsView from './pages/RequestsView';
 
 function App() {
   return (
