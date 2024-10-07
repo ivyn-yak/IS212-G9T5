@@ -4,7 +4,7 @@ from util.staff_apply import *
 pending = Blueprint('pending', __name__)
 
 @pending.route("/api/pending/<int:staff_id>")
-def             get_pending(staff_id):
+def get_pending(staff_id):
     employee = get_employee_by_id(staff_id)
     if not employee:
         return jsonify({"error": "Staff not found"}), 404
