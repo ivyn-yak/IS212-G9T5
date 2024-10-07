@@ -8,6 +8,7 @@ from routes.employee import employee
 from routes.wfh_dates import dates
 from routes.staff_apply import apply
 from routes.manager_approve import approve
+from routes.staff_pending import pending
 
 load_dotenv()
 
@@ -29,6 +30,7 @@ app.register_blueprint(employee)
 app.register_blueprint(dates)
 app.register_blueprint(apply)
 app.register_blueprint(approve)
+app.register_blueprint(pending)
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5001, debug=True)
