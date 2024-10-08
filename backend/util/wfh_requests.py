@@ -13,19 +13,19 @@ def update_request(request_id, data):
     
     # decision can be approved, rejected, cancelled, withdrawn
     if 'start_date' in data:
-        wfh_request['start_date'] = data['start_date']
+        wfh_request["start_date"] = data['start_date']
     if 'end_date' in data:
-        wfh_request['end_date'] = data['end_date']
+        wfh_request["end_date"] = data['end_date']
     if 'recurrence_days' in data:
-        wfh_request['recurrence_days'] = data['recurrence_days']
+        wfh_request["recurrence_days"] = data['recurrence_days']
     if 'is_am' in data:
-        wfh_request['is_am'] = data['is_am']
+        wfh_request["is_am"] = data['is_am']
     if 'is_pm' in data:
-        wfh_request['is_pm'] = data['is_pm']
+        wfh_request["is_pm"] = data['is_pm']
     if 'request_status' in data:
-        wfh_request['request_status'] = data['request_status']
+        wfh_request["request_status"] = data['request_status']
     if 'request_reason' in data:
-        wfh_request['request_reason'] = data['request_reason']
+        wfh_request["request_reason"] = data['request_reason']
 
     db.session.commit()
 

@@ -1,49 +1,72 @@
 @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap');
 
+body, html {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  font-family: 'Open Sans', sans-serif;
+}
+
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
-}
-
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
-}
-
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
-}
-
-.card {
-  padding: 2em;
-}
-
-.read-the-docs {
-  color: #888;
+  height: 100%;
+  width: 100%;
 }
 
 .app-layout {
-  display: flex;               /* Use flexbox to layout the sidebar and main content side by side */
-  height: 100vh;               /* Full viewport height */
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+}
+
+.navbar {
+  height: 60px;
+  width: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  /* Add your navbar styles here */
+}
+
+.main-container {
+  display: flex;
+  flex: 1;
+  width: 100%;
+  margin-top: 60px; /* Add top margin equal to navbar height */
+}
+
+.sidebar {
+  width: 200px;
+  height: calc(100vh - 60px); /* Subtract navbar height */
+  position: fixed;
+  left: 0;
+  top: 60px; /* Position below navbar */
+  overflow-y: auto;
+  /* Add your sidebar styles here */
+}
+
+.content-area {
+  flex: 1;
+  margin-left: 240px; /* Equal to sidebar width */
+  padding: 20px;
+  min-height: calc(100vh - 60px); /* Subtract navbar height */
+  box-sizing: border-box;
+}
+
+/* You may need to adjust these media queries based on your needs */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 100%;
+    height: auto;
+    position: static;
+  }
+  .content-area {
+    margin-left: 0;
+    width: 100%;
+  }
+  .main-container {
+    flex-direction: column;
+  }
 }
