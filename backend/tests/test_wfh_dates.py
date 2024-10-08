@@ -4,6 +4,7 @@ from server import app, db
 from models import Employee, WFHRequests, WFHRequestDates
 from datetime import date
 
+
 class TestApp(flask_testing.TestCase):
     app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite://"
     app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {}
@@ -89,9 +90,16 @@ class TestWFHDates(TestApp):
             "is_pm": False
         }])
 
+    def test_get_staff_wfh_dates_no_dates(self):
+        # Test when no WFH dates exist for a staff member
+        staff_id = 140894
+        response = self.client.get(f"/api/staff/{staff_id}/wfh_dates", content_type='application/json')
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.json, {"message": "No WFH dates found for this staff member"})
+
     def test_get_staff_wfh_dates_in_range(self):
         staff_id = 140002
-        response = self.client.get(f"/api/staff/{staff_id}/wfh_dates?start_date=2024-09-01&end_date=2024-09-30", content_type='application/json')
+        response = self.client.get(f"/api/staff/{staff_id}/wfh_dates_in_range?start_date=2024-09-01&end_date=2024-09-30", content_type='application/json')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json, [{
             "date_id": 1,
@@ -101,6 +109,12 @@ class TestWFHDates(TestApp):
             "is_am": True,
             "is_pm": False
         }])
+
+    def test_get_staff_wfh_dates_in_range_missing_params(self):
+        staff_id = 140002
+        response = self.client.get(f"/api/staff/{staff_id}/wfh_dates_in_range", content_type='application/json')
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json, {"error": "Please provide both start_date and end_date"})
 
     def test_get_staff_wfh_and_office_dates_in_range(self):
         staff_id = 140002
@@ -117,9 +131,7 @@ class TestWFHDates(TestApp):
             }],
             "in_office_dates": [
                 {"date": "2024-09-01", "is_am": True, "is_pm": True},
-                # Other in-office dates within the range
                 {"date": "2024-09-24", "is_am": False, "is_pm": True},  # Not WFH for PM
-                # ...
                 {"date": "2024-09-30", "is_am": True, "is_pm": True}
             ]
         }
@@ -129,23 +141,26 @@ class TestWFHDates(TestApp):
         staff_id = 140002
         response = self.client.get(f"/api/staff/{staff_id}/team_wfh_schedule?start_week_date=2024-09-20", content_type='application/json')
         self.assertEqual(response.status_code, 200)
+
         expected_response = {
             "staff": {
-                "staff_id": 140002,
-                "ScheduleDetails": [{
-                    "date_id": 1,
-                    "request_id": 1,
-                    "staff_id": 140002,
-                    "specific_date": "2024-09-24",
-                    "is_am": True,
-                    "is_pm": False
-                }]
+                "staffID": 140002,
+                "scheduleTrails": [
+                    { "date": "2024-09-24", "is_am": True, "is_pm": False }
+                ]
             },
             "team": [
-                # Any other team members (if applicable)
+                {
+                    "staffID": 140002,
+                    "name": "Susan Goh",
+                    "scheduleTrails": [
+                        { "date": "2024-09-24", "is_am": True, "is_pm": False }
+                    ]
+                }
             ]
         }
         self.assertEqual(response.json["staff"], expected_response["staff"])
+        self.assertEqual(response.json["team"], expected_response["team"])
 
     def test_get_department_schedules(self):
         response = self.client.get(f"/api/departments/schedules?start_week_date=2024-09-20", content_type='application/json')
@@ -165,14 +180,24 @@ class TestWFHDates(TestApp):
                                 "is_am": True,
                                 "is_pm": False
                             }]
-                        },
-                        # Any other members in the team
+                        }
                     ]
                 ]
             }
-            # Any other departments
         ]
         self.assertEqual(response.json[0]["department_name"], expected_response[0]["department_name"])
+
+    def test_get_team_wfh_schedule_missing_params(self):
+        staff_id = 140002
+        response = self.client.get(f"/api/staff/{staff_id}/team_wfh_schedule", content_type='application/json')
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json, {"error": "Please provide start_week_date"})
+
+    def test_get_department_schedules_missing_params(self):
+        response = self.client.get(f"/api/departments/schedules", content_type='application/json')
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json, {"error": "Please provide start_week_date"})
+
 
 if __name__ == '__main__':
     unittest.main()

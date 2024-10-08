@@ -30,7 +30,7 @@ def get_staff_wfh_dates(staff_id):
     return jsonify([date.json() for date in wfh_dates])
 
 # Get all wfh dates for a certain staff id in a certain date range
-#GET /api/staff/1/wfh_dates?start_date=2024-09-01&end_date=2024-09-30
+#GET /api/staff/1/wfh_dates_in_range?start_date=2024-09-01&end_date=2024-09-30
 # [
 #   {
 #     "date_id": 2,
@@ -42,7 +42,7 @@ def get_staff_wfh_dates(staff_id):
 #   }
 # ]
 
-@dates.route("/api/staff/<int:staff_id>/wfh_dates", methods=["GET"])
+@dates.route("/api/staff/<int:staff_id>/wfh_dates_in_range", methods=["GET"])
 def get_staff_wfh_dates_in_range(staff_id):
     start_date = request.args.get('start_date')
     end_date = request.args.get('end_date')
@@ -179,19 +179,22 @@ def get_staff_and_team_wfh_schedule(staff_id):
             WFHRequestDates.specific_date >= start_date,
             WFHRequestDates.specific_date <= end_date
         ).all()
-        return [date.json() for date in wfh_dates]
+
+        # Return the dates in the desired format
+        return [{"date": str(date.specific_date), "is_am": date.is_am, "is_pm": date.is_pm} for date in wfh_dates]
 
     # Get the schedule for the main staff
     schedule_response["staff"] = {
-        "staff_id": staff_id,  # Use original staff_id from input
-        "ScheduleDetails": get_wfh_schedule(staff_id)
+        "staffID": staff_id,
+        "scheduleTrails": get_wfh_schedule(staff_id)
     }
 
-    # Get the schedule for the team
+    # Get the schedule for the team and include the name in the response
     for member in full_team:
         schedule_response["team"].append({
-            "staff_id": member.staff_id,
-            "ScheduleDetails": get_wfh_schedule(member.staff_id)
+            "staffID": member.staff_id,
+            "name": f"{member.staff_fname} {member.staff_lname}",
+            "scheduleTrails": get_wfh_schedule(member.staff_id)
         })
 
     return jsonify(schedule_response)
