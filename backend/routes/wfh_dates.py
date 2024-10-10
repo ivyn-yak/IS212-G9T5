@@ -18,7 +18,7 @@ dates = Blueprint('dates', __name__)
 #     "is_pm": true
 #   }
 # ]
-@dates.route("/api/staff/<int:staff_id>/wfh_dates", methods=["GET"])
+@dates.route("/api/staff/<int:staff_id>/all_wfh_dates", methods=["GET"])
 def get_staff_wfh_dates(staff_id):
 
     wfh_dates = WFHRequestDates.query.filter_by(staff_id=staff_id).all()
