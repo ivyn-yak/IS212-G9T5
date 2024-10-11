@@ -134,7 +134,7 @@ def manager_approve_recurring():
                 and_(
                     WFHRequestDates.staff_id.in_([emp.staff_id for emp in employees_under_same_manager]),
                     WFHRequestDates.specific_date == current_date,
-                    # WFHRequestDates.status == 'Approved' -- to check new DB
+                    # WFHRequestDates.decision_status == 'Approved' -- to uncomment after pulling from ivyn DB
                 )
             ).count()
 
