@@ -26,8 +26,8 @@ def manager_approve_adhoc():
         
         staff_id = req["staff_id"]
         employee = Employee.query.filter_by(staff_id=staff_id).first()
-        if not employee: 
-            return jsonify({"error": f"Employee with staff_id {staff_id} not found"}), 404
+        # if not employee: 
+        #     return jsonify({"error": f"Employee with staff_id {staff_id} not found"}), 404
         
         reporting_manager_id = employee.reporting_manager
         if not reporting_manager_id:
@@ -101,8 +101,8 @@ def manager_approve_recurring():
 
         staff_id = req["staff_id"]
         employee = Employee.query.filter_by(staff_id=staff_id).first()
-        if not employee:
-            return jsonify({"error": f"Employee with staff_id {staff_id} not found"}), 404
+        # if not employee:
+        #     return jsonify({"error": f"Employee with staff_id {staff_id} not found"}), 404
 
         reporting_manager_id = employee.reporting_manager
         if not reporting_manager_id:
@@ -162,16 +162,16 @@ def manager_approve_recurring():
                     "processed_dates": [d.isoformat() for d in recurring_dates[:recurring_dates.index(current_date)]],
                     "failed_date": current_date.isoformat()
                 }), 422
-
-            decision_data = {
-                "request_id": request_id,
-                "staff_id": req["staff_id"],
-                "manager_id": req["manager_id"],
-                "decision_status": data.get("decision_status"),
-                "decision_date": current_date.isoformat(),
-                "decision_reason": data.get("decision_reason")
-            }
-            decision = create_request_decision(decision_data)
+            
+            # decision_data = {
+            #     "request_id": request_id,
+            #     "staff_id": req["staff_id"],
+            #     "manager_id": req["manager_id"],
+            #     "decision_status": data.get("decision_status"),
+            #     "decision_date": current_date.isoformat(),
+            #     "decision_reason": data.get("decision_reason")
+            # }
+            decision = create_request_decision(data)
             if "error" in decision:
                 return jsonify({"error": f"Error creating decision for date {current_date}: {decision['error']}"}), 500
             decisions.append(decision["decision"])
