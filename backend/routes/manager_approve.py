@@ -94,7 +94,7 @@ def manager_approve_recurring():
         return jsonify({"error": "Invalid JSON or no data provided"}), 400
 
     try:
-        request_id = data.get("request_id")
+        request_id = data["request_id"]
         req = get_request(request_id)
         if not req:
             return jsonify({"error": "Request not found"}), 404
@@ -113,7 +113,7 @@ def manager_approve_recurring():
 
         start_date = date.fromisoformat(req["start_date"])
         end_date = date.fromisoformat(req["end_date"])
-        recurrence_days = req.get("recurrence_days")
+        recurrence_days = req["recurrence_days"]
 
         if not recurrence_days:
             return jsonify({"error": "Recurrence days not specified"}), 400
