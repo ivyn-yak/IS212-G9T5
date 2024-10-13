@@ -99,13 +99,12 @@ class WFHRequestDates(db.Model):
     request_id = Column(Integer, ForeignKey('work_from_home_requests.request_id'), nullable=False)
     specific_date = Column(Date, nullable=False)  # The specific work-from-home date
     staff_id = Column(Integer, ForeignKey('employee.staff_id'), nullable=False)
-    decision_status = Column(Enum('Approved', 'Rejected', 'Withdrawn', name='decision_status'), ForeignKey('requestdecisions.decision_status'), nullable=False)
+    decision_status = Column(Enum('Approved', 'Rejected', 'Withdrawn', name='decision_status'), nullable=False)
     is_am = Column(Boolean, nullable=False, default=False)  # Is AM selected for this date?
     is_pm = Column(Boolean, nullable=False, default=False)  # Is PM selected for this date?
 
     work_from_home_request = db.relationship('WFHRequests')
     employee = db.relationship('Employee')
-    request_decisions = db.relationship('RequestDecisions')
 
     def json(self):
         return {
