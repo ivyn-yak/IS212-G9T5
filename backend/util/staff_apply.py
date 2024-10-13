@@ -63,6 +63,10 @@ def handle_recurring_request(data):
         start_date=date.fromisoformat(data['start_date'])
         withdrawable_until = start_date + timedelta(weeks=2) #to check if this should be moved to WFHRequestDates
 
+        recurrence_days = data.get('recurrence_days')
+        if recurrence_days is None:
+            return jsonify({"error": "Recurrence days not provided"}), 400
+
         new_request = WFHRequests(
             staff_id=staff_id,
             manager_id=rm_id,
@@ -87,6 +91,7 @@ def handle_recurring_request(data):
         }), 201
         
     except Exception as e:
+        print(f"Error occurred: {e}")
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
     
