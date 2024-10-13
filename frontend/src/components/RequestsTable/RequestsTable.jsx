@@ -1,48 +1,70 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import './RequestsTable.css';
 
-// Mock data
-const mockData = [
-  { id: 1, date: '2023-06-25', type: 'Full Day', approvingManager: 'Jack Sim', status: 'Approved' },
-  { id: 2, date: '2023-07-28', type: 'Morning', approvingManager: 'Jack Sim', status: 'Rejected' },
-  { id: 3, date: '2023-08-15', type: 'Afternoon', approvingManager: 'Jane Doe', status: 'Pending' },
-  { id: 4, date: '2023-09-01', type: 'Full Day', approvingManager: 'John Smith', status: 'Withdrawal' },
-  { id: 5, date: '2023-09-10', type: 'Morning', approvingManager: 'Jane Doe', status: 'Cancelled' },
-];
-
-const RequestsTable = () => {
-  const [requests, setRequests] = useState(mockData);
-  const [filteredRequests, setFilteredRequests] = useState(mockData);
+const RequestsTable = ({ staffId }) => {
+  const [requests, setRequests] = useState([]);
+  const [filteredRequests, setFilteredRequests] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [filters, setFilters] = useState({
     date: '',
     type: '',
     status: '',
   });
 
+  useEffect(() => {
+    fetchRequests();
+  }, [staffId]);
+
+  const fetchRequests = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await axios.get(`/api/${staffId}`);
+      setRequests(response.data.data);
+      setFilteredRequests(response.data.data);
+    } catch (error) {
+      console.error('Error fetching requests:', error);
+      setError('Failed to fetch requests. Please try again later.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleFilter = () => {
     const filtered = requests.filter(request => {
       return (
-        (filters.date ? request.date === filters.date : true) &&
-        (filters.type ? request.type === filters.type : true) &&
-        (filters.status ? request.status === filters.status : true)
+        (filters.date ? request.start_date === filters.date : true) &&
+        (filters.type ? request.request_type === filters.type : true) &&
+        (filters.status ? request.request_status === filters.status : true)
       );
     });
     setFilteredRequests(filtered);
   };
 
-  const handleCancel = (id) => {
-    console.log(`Cancelling request with id: ${id}`);
-    const updatedRequests = requests.map(request =>
-      request.id === id ? { ...request, status: 'Cancelled' } : request
-    );
-    setRequests(updatedRequests);
-    setFilteredRequests(updatedRequests);
+  const handleCancel = async (id) => {
+    try {
+      await axios.post(`/api/cancel-request/${id}`);
+      fetchRequests();
+    } catch (error) {
+      console.error('Error cancelling request:', error);
+      setError('Failed to cancel request. Please try again.');
+    }
   };
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
 
   return (
     <div className="request-table">
       <div className="filter-section">
-        <input
+      <input
           type="date"
           value={filters.date}
           onChange={(e) => setFilters({ ...filters, date: e.target.value })}
@@ -69,34 +91,38 @@ const RequestsTable = () => {
         </select>
         <button onClick={handleFilter}>Filter</button>
       </div>
-      <table>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Date</th>
-            <th>Type</th>
-            <th>Approving Manager</th>
-            <th>Status</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredRequests.map((request) => (
-            <tr key={request.id}>
-              <td>{request.id}</td>
-              <td>{request.date}</td>
-              <td>{request.type}</td>
-              <td>{request.approvingManager}</td>
-              <td>{request.status}</td>
-              <td>
-                {request.status === 'Pending' && (
-                  <button onClick={() => handleCancel(request.id)}>Cancel</button>
-                )}
-              </td>
+      {Array.isArray(filteredRequests) && filteredRequests.length > 0 ? (
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Start Date</th>
+              <th>End Date</th>
+              <th>Type</th>
+              <th>Status</th>
+              <th>Action</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {filteredRequests.map((request) => (
+              <tr key={request.request_id}>
+                <td>{request.request_id}</td>
+                <td>{request.start_date}</td>
+                <td>{request.end_date}</td>
+                <td>{request.request_type}</td>
+                <td>{request.request_status}</td>
+                <td>
+                  {request.request_status === 'Pending' && (
+                    <button onClick={() => handleCancel(request.request_id)}>Cancel</button>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      ) : (
+        <p>No requests found.</p>
+      )}
     </div>
   );
 };
