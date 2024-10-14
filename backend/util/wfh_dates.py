@@ -1,13 +1,13 @@
-from datetime import datetime
 from models import *
+from datetime import datetime
 
-def add_approved_date(request):
+def add_approved_date(request, decision):
     try: 
-        specific_date = datetime.strptime(request["start_date"], '%Y-%m-%d')
         new_date = WFHRequestDates(
             request_id=request["request_id"],
-            specific_date=specific_date,
+            specific_date = datetime.strptime(request.get("start_date"), '%Y-%m-%d').date(),
             staff_id=request["staff_id"],
+            decision_status = decision,
             is_am=request["is_am"],
             is_pm=request["is_pm"]
             )

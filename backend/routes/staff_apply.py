@@ -18,9 +18,8 @@ def staff_apply():
         return handle_adhoc_request(data)
     
     elif data.get("request_type") == "Recurring":
-        pass
-        # Not implemented yet
-        # return handle_recurring_request(data)
+        return handle_recurring_request(data)
+    
     else:
         return jsonify({"error": "Invalid request type"}), 400
     

@@ -16,44 +16,38 @@ import './WeeklyCalendar.css';
 
 // Mock API function
 const fetchScheduleData = async (staffId, startDate, endDate) => {
-  console.log(`Fetching data for staffId: ${staffId}, startDate: ${startDate}, endDate: ${endDate}`);
-  // Return mock data for September 25-27, 2024
-  return {
-    staff: {
-      staffID: staffId,
-      scheduleTrails: [
-        { date: '2024-09-25', is_am: true, is_pm: true },
-        { date: '2024-09-26', is_am: false, is_pm: true },
-        { date: '2024-09-27', is_am: true, is_pm: false },
-      ]
-    },
-    team: [
-      {
-        staffID: '1',
-        name: 'John Doe',
-        scheduleTrails: [
-          { date: '2024-09-25', is_am: true, is_pm: true },
-          { date: '2024-09-26', is_am: false, is_pm: true },
-          { date: '2024-09-27', is_am: true, is_pm: false },
-        ]
+  try {
+    const response = await fetch(`/api/staff/${staffId}/wfh_office_dates?start_date=${startDate}&end_date=${endDate}`);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    
+    // Transform the data to match the structure expected by the component
+    return {
+      staff: {
+        staffID: data.staff.staff_id,
+        scheduleTrails: data.staff.ScheduleDetails.map(detail => ({
+          date: detail.specific_date,
+          is_am: detail.is_am,
+          is_pm: detail.is_pm
+        }))
       },
-      {
-        staffID: '2',
-        name: 'Jane Smith',
-        scheduleTrails: [
-          { date: '2024-09-25', is_am: false, is_pm: false },
-          { date: '2024-09-26', is_am: true, is_pm: true },
-        ]
-      },
-      {
-        staffID: '3',
-        name: 'Bob Johnson',
-        scheduleTrails: [
-          { date: '2024-09-27', is_am: true, is_pm: true },
-        ]
-      },
-    ]
-  };
+      team: data.team.map(member => ({
+        staffID: member.staff_id.toString(),
+        scheduleTrails: member.ScheduleDetails.map(detail => ({
+          date: detail.specific_date,
+          is_am: detail.is_am,
+          is_pm: detail.is_pm
+        }))
+      }))
+    };
+  } catch (error) {
+    console.error('Error fetching schedule data:', error);
+    throw error;
+  }
 };
 
 const WeeklySchedule = () => {
@@ -73,13 +67,18 @@ const WeeklySchedule = () => {
   
   useEffect(() => {
     const fetchData = async () => {
-      const startOfWeek = selectedWeekStart.format('YYYY-MM-DD');
-      const endOfWeek = selectedWeekStart.endOf('week').format('YYYY-MM-DD');
-      const data = await fetchScheduleData(staffId, startOfWeek, endOfWeek);
-      console.log('Fetched schedule data:', data);
-      setScheduleData(data);
+      try {
+        const startOfWeek = selectedWeekStart.format('YYYY-MM-DD');
+        const endOfWeek = selectedWeekStart.endOf('week').format('YYYY-MM-DD');
+        const data = await fetchScheduleData(staffId, startOfWeek, endOfWeek);
+        console.log('Fetched schedule data:', data);
+        setScheduleData(data);
+      } catch (error) {
+        console.error('Error fetching schedule data:', error);
+        // You might want to set an error state here and display it to the user
+      }
     };
-
+  
     fetchData();
   }, [staffId, selectedWeekStart]);
 
