@@ -45,7 +45,7 @@ class WFHRequests(db.Model):
     is_pm = Column(Boolean, nullable=False, default=False)  # Is PM selected?
     request_status = Column(Enum('Pending', 'Approved', 'Rejected', 'Cancelled', 'Withdrawn', name='request_status'), nullable=False)
     apply_date = Column(Date, nullable=False)
-    withdrawable_until = Column(Date, nullable=False)
+    withdraw_reason = Column(String, nullable=True)
     request_reason = Column(String, nullable=True)
 
     employee = db.relationship('Employee', foreign_keys=[staff_id])
@@ -63,7 +63,7 @@ class WFHRequests(db.Model):
             "is_pm": self.is_pm,
             "request_status": self.request_status,
             "apply_date": str(self.apply_date),
-            "withdrawable_until": str(self.withdrawable_until),
+            "withdraw_reason": self.withdraw_reason,
             "request_reason": self.request_reason
         }
 
@@ -75,7 +75,7 @@ class RequestDecisions(db.Model):
     request_id = Column(Integer, ForeignKey('work_from_home_requests.request_id'), nullable=False)
     manager_id = Column(Integer, ForeignKey('employee.staff_id'), nullable=False)  # Manager who made the decision
     decision_date = Column(Date, nullable=False)
-    decision_status = Column(Enum('Approved', 'Rejected', 'Withdrawn', name='decision_status'), nullable=False)
+    decision_status = Column(Enum('Approved', 'Rejected', name='decision_status'), nullable=False)
     decision_notes = Column(Text, nullable=True)
 
     work_from_home_request = db.relationship('WFHRequests')

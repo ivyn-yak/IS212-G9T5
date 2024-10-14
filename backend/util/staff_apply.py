@@ -16,21 +16,18 @@ def handle_adhoc_request(data):
         if not manager:
             return jsonify({"error": "Manager not found"}), 404
 
-        start_date=date.fromisoformat(data['start_date'])
-        withdrawable_until = start_date + timedelta(weeks=2)
-
         new_request = WFHRequests(
             staff_id=staff_id,
             manager_id=rm_id,
             request_type=data['request_type'],  
-            start_date=start_date,  
+            start_date=date.fromisoformat(data['start_date']),  
             end_date=date.fromisoformat(data['end_date']),
             recurrence_days=data.get('recurrence_days', None),
             is_am=data['is_am'],
             is_pm=data['is_pm'], 
             request_status= "Pending",  
             apply_date=date.fromisoformat(data['apply_date']),
-            withdrawable_until=withdrawable_until,
+            withdraw_reason=None,
             request_reason=data.get('request_reason')
         )
         
@@ -78,7 +75,7 @@ def handle_recurring_request(data):
             is_pm=data['is_pm'], 
             request_status= "Pending",  
             apply_date=date.fromisoformat(data['apply_date']),
-            withdrawable_until=withdrawable_until,
+            withdraw_reason=None,
             request_reason=data.get('request_reason')
         )
         

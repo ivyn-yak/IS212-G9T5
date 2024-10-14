@@ -117,7 +117,7 @@ class TestManagerApproveAdhoc(TestApp):
             end_date=datetime.strptime("2024-09-20", '%Y-%m-%d'),
             request_status='Pending',
             apply_date=datetime.now(),
-            withdrawable_until=datetime.strptime("2024-09-10", '%Y-%m-%d'),
+            withdraw_reason=None,
             request_reason='Personal matters',
             is_am=False,
             is_pm=True
@@ -150,7 +150,7 @@ class TestManagerApproveAdhoc(TestApp):
             end_date=datetime.strptime("2024-09-20", '%Y-%m-%d'),
             request_status='Approved',
             apply_date=datetime.now(),
-            withdrawable_until=datetime.strptime("2024-09-10", '%Y-%m-%d'),
+            withdraw_reason=None,
             request_reason='Personal matters',
             is_am=False,
             is_pm=True
@@ -164,7 +164,7 @@ class TestManagerApproveAdhoc(TestApp):
             end_date=datetime.strptime("2024-09-22", '%Y-%m-%d'),    
             request_status='Approved',
             apply_date=datetime.now(),
-            withdrawable_until=datetime.strptime("2024-09-10", '%Y-%m-%d'),  
+            withdraw_reason=None,  
             request_reason='Medical appointment',
             is_am=True,
             is_pm=False
@@ -179,7 +179,7 @@ class TestManagerApproveAdhoc(TestApp):
             end_date=datetime.strptime("2024-09-25", '%Y-%m-%d'),    
             request_status='Approved',
             apply_date=datetime.now(),
-            withdrawable_until=datetime.strptime("2024-09-10", '%Y-%m-%d'),  
+            withdraw_reason=None,  
             request_reason='Family matters',
             is_am=False,
             is_pm=True
@@ -197,7 +197,7 @@ class TestManagerApproveAdhoc(TestApp):
             end_date=datetime.strptime("2024-09-20", '%Y-%m-%d'),
             request_status='Pending',
             apply_date=datetime.now(),
-            withdrawable_until=datetime.strptime("2024-09-10", '%Y-%m-%d'),
+            withdraw_reason=None,
             request_reason='Urgent family matter',
             is_am=True,
             is_pm=False
@@ -228,7 +228,7 @@ class TestManagerApproveAdhoc(TestApp):
             end_date=datetime.strptime("2024-09-20", '%Y-%m-%d'),
             request_status='Approved',
             apply_date=datetime.now(),
-            withdrawable_until=datetime.strptime("2024-09-10", '%Y-%m-%d'),
+            withdraw_reason=None,
             request_reason='Personal matters',
             is_am=False,
             is_pm=True
@@ -243,7 +243,7 @@ class TestManagerApproveAdhoc(TestApp):
             end_date=datetime.strptime("2024-09-22", '%Y-%m-%d'),    
             request_status='Pending',
             apply_date=datetime.now(),
-            withdrawable_until=datetime.strptime("2024-09-10", '%Y-%m-%d'), 
+            withdraw_reason=None, 
             request_reason='Medical appointment',
             is_am=True,
             is_pm=False
@@ -258,7 +258,7 @@ class TestManagerApproveAdhoc(TestApp):
             end_date=datetime.strptime("2024-09-25", '%Y-%m-%d'),    
             request_status='Pending',
             apply_date=datetime.now(),
-            withdrawable_until=datetime.strptime("2024-09-10", '%Y-%m-%d'),  
+            withdraw_reason=None,  
             request_reason='Family matters',
             is_am=False,
             is_pm=True
@@ -278,7 +278,7 @@ class TestManagerApproveAdhoc(TestApp):
             end_date=datetime.strptime("2024-09-20", '%Y-%m-%d'),
             request_status='Approved',
             apply_date=datetime.now(),
-            withdrawable_until=datetime.strptime("2024-09-10", '%Y-%m-%d'),
+            withdraw_reason=None,
             request_reason='Urgent family matter',
             is_am=True,
             is_pm=False
