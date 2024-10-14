@@ -43,7 +43,7 @@ class WFHRequests(db.Model):
     recurrence_days = Column(String, nullable=True)  # Only for recurring, stores the day of the week (e.g. 'Monday')
     is_am = Column(Boolean, nullable=False, default=False)  # Is AM selected?
     is_pm = Column(Boolean, nullable=False, default=False)  # Is PM selected?
-    request_status = Column(Enum('Pending', 'Approved', 'Rejected', 'Cancelled', 'Withdrawn', name='request_status'), nullable=False)
+    request_status = Column(Enum('Pending', 'Approved', 'Rejected', 'Cancelled', 'Withdrawn', 'Pending_Withdraw', name='request_status'), nullable=False)
     apply_date = Column(Date, nullable=False)
     withdraw_reason = Column(String, nullable=True)
     request_reason = Column(String, nullable=True)

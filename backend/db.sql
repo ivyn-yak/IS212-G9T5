@@ -7,7 +7,7 @@ DROP TABLE IF EXISTS work_from_home_requests CASCADE;
 DROP TABLE IF EXISTS requestdecisions CASCADE;
 
 CREATE TYPE request_type AS ENUM ('Ad-hoc', 'Recurring');
-CREATE TYPE request_status AS ENUM ('Pending', 'Approved', 'Rejected', 'Cancelled', 'Withdrawn');
+CREATE TYPE request_status AS ENUM ('Pending', 'Approved', 'Rejected', 'Cancelled', 'Withdrawn', 'Pending_Withdraw');
 CREATE TYPE decision_status AS ENUM ('Approved', 'Rejected');
 
 CREATE TABLE work_from_home_requests (
