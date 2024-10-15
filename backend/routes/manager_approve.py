@@ -37,22 +37,23 @@ def manager_approve_adhoc():
         total_employees = len(employees_under_same_manager)
         
         start_date = req["start_date"]
+        is_am = req["is_am"]
+        is_pm = req["is_pm"]
 
-        approved_adhoc_requests = WFHRequests.query.filter(
+        approved_requests = WFHRequestDates.query.filter(
             and_(
-                WFHRequests.staff_id.in_([emp.staff_id for emp in employees_under_same_manager]),
-                WFHRequests.request_type == 'Ad-hoc',
-                WFHRequests.start_date == start_date,
-                WFHRequests.request_status == 'Approved'
+                WFHRequestDates.staff_id.in_([emp.staff_id for emp in employees_under_same_manager]),
+                WFHRequestDates.specific_date == start_date,
+                WFHRequestDates.decision_status.in_(['Approved', 'Pending Withdraw']),
+                WFHRequestDates.is_am == is_am, 
+                WFHRequestDates.is_pm == is_pm, 
             )
         ).count()
 
         if total_employees > 0:
-            ratio = (approved_adhoc_requests+1) / total_employees
+            ratio = (approved_requests+1) / total_employees
         else:
             ratio = 0
-
-        # print(ratio)
 
         if ratio > 0.5:
             return jsonify({"error": "Exceed 0.5 rule limit"}), 422
