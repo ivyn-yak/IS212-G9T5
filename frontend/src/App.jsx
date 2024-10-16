@@ -30,9 +30,9 @@ function App() {
               <Route path="/:staffId/Staff/Schedule" element={<StaffViewSchedule />} />
               <Route path="/:staffId/Manager/Schedule" element={<ManageerViewTeamSchedule />} />
 
-//               <Route path="/Manager/ApprovalScreen/:staff_id" element={<ApprovalScreen />} />
-//               <Route path="/Manager/PendingRequests" element={<PendingRequests/>}/>
-//               <Route path="/Staff/WFHRequestForm" element={<WFHRequestForm/>}/>
+               {/* <Route path="/Manager/ApprovalScreen/:staff_id" element={<ApprovalScreen />} /> */}
+               {/* <Route path="/Manager/PendingRequests" element={<PendingRequests/>}/> */}
+               {/* <Route path="/Staff/WFHRequestForm" element={<WFHRequestForm/>}/> */}
                 
               <Route path="/:staffId/Staff/Application/Requests" element={<RequestsView />} />
               <Route path="/:staffId/Staff/Withdrawal" element={<WithdrawalFormView />} />
