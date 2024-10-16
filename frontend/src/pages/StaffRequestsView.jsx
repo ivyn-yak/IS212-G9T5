@@ -2,7 +2,7 @@ import React from 'react';
 import { useParams } from 'react-router-dom';
 import RequestTable from '../components/RequestsTable/RequestsTable';
 
-const RequestsView = () => {
+const StaffRequestsView = () => {
   const { staffId } = useParams();
 
   return (
@@ -13,4 +13,4 @@ const RequestsView = () => {
   );
 };
 
-export default RequestsView;
+export default StaffRequestsView;
