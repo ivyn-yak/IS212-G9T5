@@ -57,9 +57,6 @@ def handle_recurring_request(data):
         if not manager:
             return jsonify({"error": "Manager not found"}), 404
 
-        start_date=date.fromisoformat(data['start_date'])
-        withdrawable_until = start_date + timedelta(weeks=2) #to check if this should be moved to WFHRequestDates
-
         recurrence_days = data.get('recurrence_days')
         if recurrence_days is None:
             return jsonify({"error": "Recurrence days not provided"}), 400
@@ -68,7 +65,7 @@ def handle_recurring_request(data):
             staff_id=staff_id,
             manager_id=rm_id,
             request_type=data['request_type'],  
-            start_date=start_date,  
+            start_date=date.fromisoformat(data['start_date']),  
             end_date=date.fromisoformat(data['end_date']),
             recurrence_days=data.get('recurrence_days', None),
             is_am=data['is_am'],

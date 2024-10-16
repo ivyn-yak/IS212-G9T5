@@ -7,6 +7,9 @@ import HrCalendar from './pages/HrView/HrCalendar';
 import Sidebar from './components/sidebar/sidebar';
 import Navbar from './components/navbar/navbar';
 import ManageerViewTeamSchedule from './pages/ManagerViewTeamSchedule';
+// import ApprovalScreen from './components/approval/ApprovalScreen';
+// import PendingRequests from './components/approval/PendingRequests';
+// import WFHRequestForm from './components/apply/WFHRequestForm';
 import WithdrawalFormView from './pages/WithdrawalFormView';
 import { useLocation } from 'react-router-dom';
 import './App.css';
@@ -26,9 +29,15 @@ function App() {
               <Route path="/hr/hr-calendar" element={<HrCalendar />} />
               <Route path="/:staffId/Staff/Schedule" element={<StaffViewSchedule />} />
               <Route path="/:staffId/Manager/Schedule" element={<ManageerViewTeamSchedule />} />
+
+//               <Route path="/Manager/ApprovalScreen/:staff_id" element={<ApprovalScreen />} />
+//               <Route path="/Manager/PendingRequests" element={<PendingRequests/>}/>
+//               <Route path="/Staff/WFHRequestForm" element={<WFHRequestForm/>}/>
+                
               <Route path="/:staffId/Staff/Application/Requests" element={<RequestsView />} />
               <Route path="/:staffId/Staff/Withdrawal" element={<WithdrawalFormView />} />
               <Route path="*" element={<div>404 Not Found</div>} />
+
             </Routes>
           </div>
         </div>

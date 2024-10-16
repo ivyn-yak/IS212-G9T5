@@ -21,7 +21,7 @@ const RequestsTable = ({ staffId }) => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await axios.get(`/api/${staffId}`);
+      const response = await axios.get(`http://localhost:5001/api/${staffId}`);
       setRequests(response.data.data);
       setFilteredRequests(response.data.data);
     } catch (error) {
