@@ -45,7 +45,7 @@ def cancel_wfh_request(staff_id, request_id):
         return jsonify({"error": "Request not found or not owned by this staff member"}), 404
 
     # Ensure the request is pending
-    if wfh_request.request_status != 'pending':
+    if wfh_request.request_status != 'Pending':
         return jsonify({"error": "Only pending requests can be cancelled"}), 400
 
     # Check if the request falls within the allowed date range
@@ -60,7 +60,7 @@ def cancel_wfh_request(staff_id, request_id):
         return jsonify({"error": "Cancellation reason is required"}), 400
 
     # Update request status and reason
-    wfh_request.request_status = 'cancelled'
+    wfh_request.request_status = 'Cancelled'
     wfh_request.request_reason = cancellation_reason
     db.session.commit()
 

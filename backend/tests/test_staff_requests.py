@@ -159,6 +159,77 @@ class TestStaffRequests(TestApp):
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.get_json(), {"error": "Staff not found"})
 
+class TestCancelRequest(TestApp):
+    
+    def test_cancel_pending_request_success(self):
+        # Ensure the request is pending and within the allowed date range
+        wfh_request = WFHRequests.query.filter_by(request_id=2).first()
+        wfh_request.start_date = datetime.date(2024, 10, 1)  # Within valid range
+        wfh_request.request_status = 'Pending'
+        db.session.commit()
+
+        response = self.client.put(
+            "/api/staff/140008/cancel_request/2",
+            json={"cancellation_reason": "Changed my mind"},
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json(), {"message": "Request cancelled successfully"})
+
+        # Verify request status in the database
+        wfh_request = WFHRequests.query.filter_by(request_id=2).first()
+        self.assertEqual(wfh_request.request_status, 'Cancelled')
+        self.assertEqual(wfh_request.request_reason, 'Changed my mind')
+
+
+    def test_cancel_approved_request(self):
+        # Test cancelling an already approved request
+        response = self.client.put(
+            "/api/staff/140008/cancel_request/1",
+            json={"cancellation_reason": "Change of plans"},
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_json(), {"error": "Only pending requests can be cancelled"})
+
+    def test_cancel_request_without_reason(self):
+        response = self.client.put(
+            "/api/staff/140008/cancel_request/2",
+            json={},  # No cancellation reason provided
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_json(), {"error": "Cancellation reason is required"})
+
+
+    def test_cancel_nonexistent_request(self):
+        # Test cancelling a non-existent request
+        response = self.client.put(
+            "/api/staff/140008/cancel_request/999",  # Request ID 999 doesn't exist
+            json={"cancellation_reason": "Not needed"},
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.get_json(), {"error": "Request not found or not owned by this staff member"})
+
+    def test_cancel_request_outside_allowed_date_range(self):
+        # Set the request status to pending and update the start_date
+        wfh_request = WFHRequests.query.filter_by(request_id=2).first()
+        wfh_request.start_date = datetime.date(2025, 2, 1)  # Set date too far in advance
+        wfh_request.request_status = 'Pending'
+        db.session.commit()
+
+        response = self.client.put(
+            "/api/staff/140008/cancel_request/2",
+            json={"cancellation_reason": "Change of plans"},
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_json(), {"error": "Requests can only be cancelled 3 months in advance and 1 month back"})
+
+
 
 if __name__ == '__main__':
     unittest.main()
+
+
