@@ -83,8 +83,8 @@ class TestGetAllDepartmentTeams(TestApp):
 }
 
         result = get_all_department_teams()
-        print("Actual result:", result)
-        print("Expected result:", expected_result)
+        # print("Actual result:", result)
+        # print("Expected result:", expected_result)
         self.assertEqual(result, expected_result)
 
 

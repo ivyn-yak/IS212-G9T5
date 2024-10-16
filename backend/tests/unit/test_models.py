@@ -42,7 +42,7 @@ class TestWFHRequests(unittest.TestCase):
             is_pm=True, 
             request_status= "Pending",  
             apply_date=datetime.date(2024, 9, 30),
-            withdrawable_until=datetime.date(2024, 9, 29),
+            withdraw_reason=None,
             request_reason="Sick"
             )
 
@@ -58,7 +58,7 @@ class TestWFHRequests(unittest.TestCase):
             'is_pm': True,
             "request_status": "Pending",
             'apply_date': "2024-09-30",
-            'withdrawable_until': "2024-09-29",
+            'withdraw_reason': None,
             'request_reason': "Sick"
         })
 
@@ -68,6 +68,7 @@ class TestWFHRequestDates(unittest.TestCase):
             request_id=1, 
             specific_date=datetime.date(2024, 9, 15),
             staff_id=140008, 
+            decision_status="Approved",
             is_am=True,
             is_pm=True
             )
@@ -77,6 +78,7 @@ class TestWFHRequestDates(unittest.TestCase):
             "request_id": 1,
             "specific_date": "2024-09-15",
             "staff_id": 140008,
+            "decision_status": "Approved",
             "is_am": True,
             "is_pm": True
         })

@@ -50,7 +50,7 @@ class TestApp(flask_testing.TestCase):
                 is_pm=True,
                 request_status='Pending',
                 apply_date=datetime.date(2024, 9, 30),
-                withdrawable_until=datetime.date(2024, 9, 29),
+                withdraw_reason = None,
                 request_reason="Sick"
             )
         
