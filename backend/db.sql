@@ -48,5 +48,5 @@ CREATE TABLE work_from_home_request_dates (
     is_am BOOLEAN NOT NULL,  
     is_pm BOOLEAN NOT NULL,  
     FOREIGN KEY (request_id) REFERENCES work_from_home_requests(request_id),
-    FOREIGN KEY (staff_id) REFERENCES employee(staff_id),
+    FOREIGN KEY (staff_id) REFERENCES employee(staff_id)
 );
