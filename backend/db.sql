@@ -7,8 +7,8 @@ DROP TABLE IF EXISTS work_from_home_requests CASCADE;
 DROP TABLE IF EXISTS requestdecisions CASCADE;
 
 CREATE TYPE request_type AS ENUM ('Ad-hoc', 'Recurring');
-CREATE TYPE request_status AS ENUM ('Pending', 'Approved', 'Rejected', 'Cancelled', 'Withdrawn');
-CREATE TYPE decision_status AS ENUM ('Approved', 'Rejected', 'Withdrawn');
+CREATE TYPE request_status AS ENUM ('Pending', 'Approved', 'Rejected', 'Cancelled', 'Withdrawn', 'Pending_Withdraw');
+CREATE TYPE decision_status AS ENUM ('Approved', 'Rejected');
 
 CREATE TABLE work_from_home_requests (
     request_id SERIAL PRIMARY KEY,
@@ -22,7 +22,7 @@ CREATE TABLE work_from_home_requests (
     is_pm BOOLEAN NOT NULL,  
     request_status request_status NOT NULL,  
     apply_date DATE NOT NULL,
-    withdrawable_until DATE NOT NULL,
+    withdraw_reason TEXT,
     request_reason TEXT,
     FOREIGN KEY (staff_id) REFERENCES employee(staff_id),
     FOREIGN KEY (manager_id) REFERENCES employee(staff_id)
@@ -48,5 +48,5 @@ CREATE TABLE work_from_home_request_dates (
     is_am BOOLEAN NOT NULL,  
     is_pm BOOLEAN NOT NULL,  
     FOREIGN KEY (request_id) REFERENCES work_from_home_requests(request_id),
-    FOREIGN KEY (staff_id) REFERENCES employee(staff_id),
+    FOREIGN KEY (staff_id) REFERENCES employee(staff_id)
 );

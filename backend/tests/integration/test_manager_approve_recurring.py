@@ -128,7 +128,7 @@ class TestManagerApproveRecurring(TestApp):
             recurrence_days='invalid_day',
             request_status='Pending',
             apply_date=date.today(), 
-            withdrawable_until=start_date - timedelta(days=30)
+            withdraw_reason=None
         )
         db.session.add(req)
         db.session.commit()
@@ -157,7 +157,7 @@ class TestManagerApproveRecurring(TestApp):
             recurrence_days='monday',
             request_status='Pending',
             apply_date=date.today(), 
-            withdrawable_until=start_date - timedelta(days=30)
+            withdraw_reason=None
  
         )
         db.session.add(req)
