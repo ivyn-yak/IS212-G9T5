@@ -14,12 +14,13 @@ dates = Blueprint('dates', __name__)
 #     "date_id": 1,
 #     "request_id": 1,
 #     "staff_id": 1,
+#     "decision_status": "Approved",
 #     "specific_date": "2024-09-24",
 #     "is_am": true,
 #     "is_pm": true
 #   }
 # ]
-@dates.route("/api/staff/<int:staff_id>/wfh_dates", methods=["GET"])
+@dates.route("/api/staff/<int:staff_id>/all_wfh_dates", methods=["GET"])
 def get_staff_wfh_dates(staff_id):
 
     wfh_dates = WFHRequestDates.query.filter_by(staff_id=staff_id).all()
@@ -36,6 +37,7 @@ def get_staff_wfh_dates(staff_id):
 #     "date_id": 2,
 #     "request_id": 2,
 #     "staff_id": 1,
+#     "decision_status": "Approved",
 #     "specific_date": "2024-09-02",
 #     "is_am": true,
 #     "is_pm": false
@@ -54,7 +56,8 @@ def get_staff_wfh_dates_in_range(staff_id):
     wfh_dates = WFHRequestDates.query.filter(
         WFHRequestDates.staff_id == staff_id,
         WFHRequestDates.specific_date >= start_date,
-        WFHRequestDates.specific_date <= end_date
+        WFHRequestDates.specific_date <= end_date,
+        WFHRequestDates.decision_status == "Approved"
     ).all()
 
     if not wfh_dates:
@@ -70,6 +73,7 @@ def get_staff_wfh_dates_in_range(staff_id):
 #       "date_id": 2,
 #       "request_id": 2,
 #       "staff_id": 1,
+#       "decision_status": "Approved",
 #       "specific_date": "2024-09-02",
 #       "is_am": true,
 #       "is_pm": false
@@ -108,7 +112,8 @@ def get_staff_wfh_and_office_dates_in_range(staff_id):
     wfh_dates = WFHRequestDates.query.filter(
         WFHRequestDates.staff_id == staff_id,
         WFHRequestDates.specific_date >= start_date,
-        WFHRequestDates.specific_date <= end_date
+        WFHRequestDates.specific_date <= end_date,
+        WFHRequestDates.decision_status == "Approved"
     ).all()
 
     # Prepare a dictionary to store WFH status by date
