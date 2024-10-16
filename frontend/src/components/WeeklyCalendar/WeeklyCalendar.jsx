@@ -17,7 +17,7 @@ import './WeeklyCalendar.css';
 // Mock API function
 const fetchScheduleData = async (staffId, startDate, endDate) => {
   try {
-    const response = await fetch(`/api/staff/${staffId}/wfh_office_dates?start_date=${startDate}&end_date=${endDate}`);
+    const response = await fetch(`http://localhost:5001/api/staff/${staffId}/wfh_office_dates?start_date=${startDate}&end_date=${endDate}`);
     
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
