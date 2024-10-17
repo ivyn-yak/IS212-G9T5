@@ -226,7 +226,7 @@ class TestManagerApproveAdhoc(TestApp):
                                     content_type='application/json')
         
         self.assertEqual(response.status_code, 422)
-        self.assertEqual(response.get_json(), {"error": "Exceed 0.5 rule limit"})
+        self.assertEqual(response.get_json(), {"error": "Exceed 0.5 rule limit for PM session"})
 
 
 
