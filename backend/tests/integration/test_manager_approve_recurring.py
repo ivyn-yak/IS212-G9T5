@@ -51,10 +51,35 @@ class TestApp(flask_testing.TestCase):
             reporting_manager=140001,
             role=3
         )
+        self.employee_3=Employee(
+            staff_id=140010, 
+            staff_fname='Sophia', 
+            staff_lname='Toh', 
+            dept='Sales', 
+            position="Sales Manager", 
+            country="Singapore",
+            email="Sophia.Toh@allinone.com.sg",
+            reporting_manager=140001,
+            role=3
+        )
+        self.employee_4=Employee(
+            staff_id=140011,
+            staff_fname='Joseph',
+            staff_lname='Tan',
+            dept='Sales',
+            position="Sales Manager", 
+            country="Singapore",
+            email="josephtan@allinone.come.sg",
+            reporting_manager=140001,
+            role=3
+        )
+
 
         db.session.add(self.manager)
         db.session.add(self.employee_1)
         db.session.add(self.employee_2)
+        db.session.add(self.employee_3)
+        db.session.add(self.employee_4)
         db.session.commit()
 
     def tearDown(self):
@@ -179,6 +204,92 @@ class TestManagerApproveRecurring(TestApp):
 
         self.assertEqual(response.status_code, 201)
         self.assertIn("Recurring WFH requests processed successfully", response.get_json()["message"])
+
+    def test_approve_recurring_headcount_exceed(self):
+        wfh_request_1 = WFHRequests(
+            request_id=1,
+            staff_id=140008,
+            manager_id=140001,
+            request_type='Ad-hoc',
+            start_date=datetime.strptime("2024-09-16", '%Y-%m-%d'),
+            end_date=datetime.strptime("2024-09-20", '%Y-%m-%d'),
+            request_status='Approved',
+            apply_date=datetime.now(),
+            withdraw_reason=datetime.strptime("2024-09-10", '%Y-%m-%d'),
+            request_reason='Personal matters',
+            is_am=False,
+            is_pm=True
+        )
+        db.session.add(wfh_request_1)
+
+        wfh_request_2 = WFHRequests(
+            request_id=3,
+            staff_id=140010,
+            manager_id=140001,
+            request_type='Ad-hoc',
+            start_date=datetime.strptime("2024-09-16", '%Y-%m-%d'),
+            end_date=datetime.strptime("2024-09-20", '%Y-%m-%d'),
+            request_status='Approved',
+            apply_date=datetime.now(),
+            withdraw_reason=datetime.strptime("2024-09-10", '%Y-%m-%d'),
+            request_reason='Personal matters',
+            is_am=False,
+            is_pm=True
+        )
+        db.session.add(wfh_request_2)
+
+        wfh_request_3 = WFHRequests(
+            request_id=2,
+            staff_id=140009,
+            manager_id=140001,
+            request_type='Recurring',
+            start_date=datetime.strptime("2024-09-16", '%Y-%m-%d'),
+            end_date=datetime.strptime("2024-09-20", '%Y-%m-%d'),
+            recurrence_days='monday',
+            request_status='Pending',
+            apply_date=datetime.now(),
+            withdraw_reason=datetime.strptime("2024-09-10", '%Y-%m-%d'),
+            request_reason='Personal matters',
+            is_am=False,
+            is_pm=True
+        )
+        db.session.add(wfh_request_3)
+
+        wfh_request_date_1 = WFHRequestDates(
+                request_id = 1, 
+                specific_date=datetime.strptime("2024-09-16", '%Y-%m-%d'),
+                decision_status='Approved',
+                staff_id=140008,
+                is_am=False,
+                is_pm=True
+            )
+        db.session.add(wfh_request_date_1)
+
+        wfh_request_date_2 = WFHRequestDates(
+                request_id = 3, 
+                specific_date=datetime.strptime("2024-09-16", '%Y-%m-%d'),
+                decision_status='Approved',
+                staff_id=140010,
+                is_am=False,
+                is_pm=True
+            )
+        db.session.add(wfh_request_date_2)
+        db.session.commit()
+
+        request_body = {
+            'request_id': 2,
+            'decision_status': 'Approved',
+            'start_date': '2024-09-16',  
+            'decision_notes': 'Nil',
+            'manager_id': 140001
+        }
+
+        response = self.client.post("/api/approve_recurring",
+                                    data=json.dumps(request_body),
+                                    content_type='application/json')
+        
+        self.assertEqual(response.status_code, 422)
+        self.assertEqual(response.get_json(), {"error": "Exceed 0.5 rule limit for PM session"})
 
 if __name__ == "__main__":
     unittest.main()

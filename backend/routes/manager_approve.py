@@ -20,9 +20,6 @@ def manager_approve_adhoc():
         req = get_request(request_id)
         if not req:
             return jsonify({"error": "Request not found"}), 404
-
-        # if data["request_type"] != 'Ad-hoc':
-        #     return jsonify({"error": "Invalid request type"}), 400
         
         staff_id = req["staff_id"]
         employee = Employee.query.filter_by(staff_id=staff_id).first()
@@ -40,34 +37,47 @@ def manager_approve_adhoc():
         is_am = req["is_am"]
         is_pm = req["is_pm"]
 
-        approved_requests = WFHRequestDates.query.filter(
-            and_(
-                WFHRequestDates.staff_id.in_([emp.staff_id for emp in employees_under_same_manager]),
-                WFHRequestDates.specific_date == start_date,
-                WFHRequestDates.decision_status.in_(['Approved', 'Pending Withdraw']),
-                WFHRequestDates.is_am == is_am, 
-                WFHRequestDates.is_pm == is_pm, 
-            )
-        ).count()
+        if is_am:
+            approved_am_requests = WFHRequestDates.query.filter(
+                and_(
+                    WFHRequestDates.staff_id.in_([emp.staff_id for emp in employees_under_same_manager]),
+                    WFHRequestDates.specific_date == start_date,
+                    WFHRequestDates.decision_status.in_(['Approved', 'Pending Withdraw']),
+                    WFHRequestDates.is_am == True  # Check for AM session
+                )
+            ).count()
 
-        if total_employees > 0:
-            ratio = (approved_requests+1) / total_employees
-        else:
-            ratio = 0
+            if total_employees > 0:
+                ratio_am = (approved_am_requests + 1) / total_employees
+            else:
+                ratio_am = 0
 
-        if ratio > 0.5:
-            return jsonify({"error": "Exceed 0.5 rule limit"}), 422
-        
+            if ratio_am > 0.5:
+                return jsonify({"error": "Exceed 0.5 rule limit for AM session"}), 422
 
-        # print(f"Calling update_request with request_id: {request_id}")
+        if is_pm:
+            approved_pm_requests = WFHRequestDates.query.filter(
+                and_(
+                    WFHRequestDates.staff_id.in_([emp.staff_id for emp in employees_under_same_manager]),
+                    WFHRequestDates.specific_date == start_date,
+                    WFHRequestDates.decision_status.in_(['Approved', 'Pending Withdraw']),
+                    WFHRequestDates.is_pm == True  # Check for PM session
+                )
+            ).count()
+
+            if total_employees > 0:
+                ratio_pm = (approved_pm_requests + 1) / total_employees
+            else:
+                ratio_pm = 0
+
+            if ratio_pm > 0.5:
+                return jsonify({"error": "Exceed 0.5 rule limit for PM session"}), 422
+
         new_req = update_request(request_id, {"request_status": data.get("decision_status")})
-        # print(f"update_request returned: {new_req}")
         if new_req is None:
             return jsonify({"error": "Request not found"}), 404
 
-        # print(f"Calling create_request_decision with data: {data}")
         decision = create_request_decision(data)
-        # print(f"create_request_decision returned: {decision}")
         if "error" in decision:
             return jsonify(decision), 500
         
@@ -145,28 +155,41 @@ def manager_approve_recurring():
             current_date += timedelta(days=1)
 
         for current_date in recurring_dates:
-            # Check the 0.5 rule for each date
-            approved_requests = WFHRequestDates.query.filter(
-                and_(
-                    WFHRequestDates.staff_id.in_([emp.staff_id for emp in employees_under_same_manager]),
-                    WFHRequestDates.specific_date == start_date,
-                    WFHRequestDates.decision_status.in_(['Approved', 'Pending Withdraw']),
-                    WFHRequestDates.is_am == is_am, 
-                    WFHRequestDates.is_pm == is_pm, 
-                )
-            ).count()
+            if is_am:
+                approved_am_requests = WFHRequestDates.query.filter(
+                    and_(
+                        WFHRequestDates.staff_id.in_([emp.staff_id for emp in employees_under_same_manager]),
+                        WFHRequestDates.specific_date == start_date,
+                        WFHRequestDates.decision_status.in_(['Approved', 'Pending Withdraw']),
+                        WFHRequestDates.is_am == True  # Check for AM session
+                    )
+                ).count()
 
+                if total_employees > 0:
+                    ratio_am = (approved_am_requests + 1) / total_employees
+                else:
+                    ratio_am = 0
 
-            if total_employees > 0:
-                ratio = (approved_requests + 1) / total_employees
-            else:
-                ratio = 0
+                if ratio_am > 0.5:
+                    return jsonify({"error": "Exceed 0.5 rule limit for AM session"}), 422
 
-            if ratio > 0.5:
-                return jsonify({
-                    "error": f"Exceed 0.5 rule limit for date {current_date.isoformat()}",
-                    "failed_date": current_date.isoformat()
-                }), 422
+            if is_pm:
+                approved_pm_requests = WFHRequestDates.query.filter(
+                    and_(
+                        WFHRequestDates.staff_id.in_([emp.staff_id for emp in employees_under_same_manager]),
+                        WFHRequestDates.specific_date == start_date,
+                        WFHRequestDates.decision_status.in_(['Approved', 'Pending Withdraw']),
+                        WFHRequestDates.is_pm == True  # Check for PM session
+                    )
+                ).count()
+
+                if total_employees > 0:
+                    ratio_pm = (approved_pm_requests + 1) / total_employees
+                else:
+                    ratio_pm = 0
+
+                if ratio_pm > 0.5:
+                    return jsonify({"error": "Exceed 0.5 rule limit for PM session"}), 422
             
         for current_date in recurring_dates:
             decision = create_request_decision(data)
