@@ -115,6 +115,9 @@ def manager_approve_recurring():
         start_date = date.fromisoformat(req["start_date"])
         end_date = date.fromisoformat(req["end_date"])
         recurrence_days = req["recurrence_days"]
+        is_am = req["is_am"]
+        is_pm = req["is_pm"]
+
 
         if not recurrence_days:
             return jsonify({"error": "Recurrence days not specified"}), 400
@@ -146,10 +149,13 @@ def manager_approve_recurring():
             approved_requests = WFHRequestDates.query.filter(
                 and_(
                     WFHRequestDates.staff_id.in_([emp.staff_id for emp in employees_under_same_manager]),
-                    WFHRequestDates.specific_date == current_date,
-                    WFHRequestDates.decision_status == 'Approved'
+                    WFHRequestDates.specific_date == start_date,
+                    WFHRequestDates.decision_status.in_(['Approved', 'Pending Withdraw']),
+                    WFHRequestDates.is_am == is_am, 
+                    WFHRequestDates.is_pm == is_pm, 
                 )
             ).count()
+
 
             if total_employees > 0:
                 ratio = (approved_requests + 1) / total_employees
