@@ -190,30 +190,6 @@ def manager_approve_recurring():
 
                 if ratio_pm > 0.5:
                     return jsonify({"error": "Exceed 0.5 rule limit for PM session"}), 422
-
-
-            # Check the 0.5 rule for each date
-            # approved_requests = WFHRequestDates.query.filter(
-            #     and_(
-            #         WFHRequestDates.staff_id.in_([emp.staff_id for emp in employees_under_same_manager]),
-            #         WFHRequestDates.specific_date == start_date,
-            #         WFHRequestDates.decision_status.in_(['Approved', 'Pending Withdraw']),
-            #         WFHRequestDates.is_am == is_am, 
-            #         WFHRequestDates.is_pm == is_pm, 
-            #     )
-            # ).count()
-
-
-            # if total_employees > 0:
-            #     ratio = (approved_requests + 1) / total_employees
-            # else:
-            #     ratio = 0
-
-            # if ratio > 0.5:
-            #     return jsonify({
-            #         "error": f"Exceed 0.5 rule limit for date {current_date.isoformat()}",
-            #         "failed_date": current_date.isoformat()
-            #     }), 422
             
         for current_date in recurring_dates:
             decision = create_request_decision(data)
