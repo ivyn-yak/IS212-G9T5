@@ -37,22 +37,23 @@ def manager_approve_adhoc():
         total_employees = len(employees_under_same_manager)
         
         start_date = req["start_date"]
+        is_am = req["is_am"]
+        is_pm = req["is_pm"]
 
-        approved_adhoc_requests = WFHRequests.query.filter(
+        approved_requests = WFHRequestDates.query.filter(
             and_(
-                WFHRequests.staff_id.in_([emp.staff_id for emp in employees_under_same_manager]),
-                WFHRequests.request_type == 'Ad-hoc',
-                WFHRequests.start_date == start_date,
-                WFHRequests.request_status == 'Approved'
+                WFHRequestDates.staff_id.in_([emp.staff_id for emp in employees_under_same_manager]),
+                WFHRequestDates.specific_date == start_date,
+                WFHRequestDates.decision_status.in_(['Approved', 'Pending Withdraw']),
+                WFHRequestDates.is_am == is_am, 
+                WFHRequestDates.is_pm == is_pm, 
             )
         ).count()
 
         if total_employees > 0:
-            ratio = (approved_adhoc_requests+1) / total_employees
+            ratio = (approved_requests+1) / total_employees
         else:
             ratio = 0
-
-        # print(ratio)
 
         if ratio > 0.5:
             return jsonify({"error": "Exceed 0.5 rule limit"}), 422
@@ -114,6 +115,9 @@ def manager_approve_recurring():
         start_date = date.fromisoformat(req["start_date"])
         end_date = date.fromisoformat(req["end_date"])
         recurrence_days = req["recurrence_days"]
+        is_am = req["is_am"]
+        is_pm = req["is_pm"]
+
 
         if not recurrence_days:
             return jsonify({"error": "Recurrence days not specified"}), 400
@@ -140,16 +144,18 @@ def manager_approve_recurring():
                 recurring_dates.append(current_date)
             current_date += timedelta(days=1)
 
-        decisions = []
         for current_date in recurring_dates:
             # Check the 0.5 rule for each date
             approved_requests = WFHRequestDates.query.filter(
                 and_(
                     WFHRequestDates.staff_id.in_([emp.staff_id for emp in employees_under_same_manager]),
-                    WFHRequestDates.specific_date == current_date,
-                    WFHRequestDates.decision_status == 'Approved'
+                    WFHRequestDates.specific_date == start_date,
+                    WFHRequestDates.decision_status.in_(['Approved', 'Pending Withdraw']),
+                    WFHRequestDates.is_am == is_am, 
+                    WFHRequestDates.is_pm == is_pm, 
                 )
             ).count()
+
 
             if total_employees > 0:
                 ratio = (approved_requests + 1) / total_employees
@@ -159,22 +165,13 @@ def manager_approve_recurring():
             if ratio > 0.5:
                 return jsonify({
                     "error": f"Exceed 0.5 rule limit for date {current_date.isoformat()}",
-                    "processed_dates": [d.isoformat() for d in recurring_dates[:recurring_dates.index(current_date)]],
                     "failed_date": current_date.isoformat()
                 }), 422
             
-            # decision_data = {
-            #     "request_id": request_id,
-            #     "staff_id": req["staff_id"],
-            #     "manager_id": req["manager_id"],
-            #     "decision_status": data.get("decision_status"),
-            #     "decision_date": current_date.isoformat(),
-            #     "decision_reason": data.get("decision_reason")
-            # }
+        for current_date in recurring_dates:
             decision = create_request_decision(data)
             if "error" in decision:
                 return jsonify({"error": f"Error creating decision for date {current_date}: {decision['error']}"}), 500
-            decisions.append(decision["decision"])
 
         # Update the original request status
         update_request(request_id, {"request_status": data.get("decision_status")})
@@ -183,7 +180,6 @@ def manager_approve_recurring():
             "message": "Recurring WFH requests processed successfully",
             "request": req,
             "recurring_dates": [date.isoformat() for date in recurring_dates],
-            "decisions": decisions
         }), 201
 
     except Exception as e:

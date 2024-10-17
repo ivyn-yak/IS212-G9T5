@@ -89,7 +89,7 @@ class TestStaffApply(TestApp):
                 'is_pm': True,
                 "request_status": "Pending",
                 'apply_date': "2024-09-30",
-                'withdrawable_until': "2024-09-29",
+                'withdraw_reason': None,
                 'request_reason': "Sick"
                 }
             })

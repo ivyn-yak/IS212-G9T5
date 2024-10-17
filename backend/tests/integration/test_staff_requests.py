@@ -49,7 +49,7 @@ class TestApp(flask_testing.TestCase):
                 is_pm=True,
                 request_status='Approved',
                 apply_date=datetime.date(2024, 9, 30),
-                withdrawable_until=datetime.date(2024, 9, 29),
+                withdraw_reason=None,
                 request_reason="Sick"
             )
         
@@ -64,7 +64,7 @@ class TestApp(flask_testing.TestCase):
                 is_pm=True,
                 request_status='Pending',
                 apply_date=datetime.date(2024, 9, 30),
-                withdrawable_until=datetime.date(2024, 10, 15),
+                withdraw_reason=None,
                 request_reason="Sick"
             )
 
@@ -95,7 +95,7 @@ class TestStaffRequests(TestApp):
                 'is_pm': True,
                 "request_status": "Approved",
                 'apply_date': "2024-09-30",
-                'withdrawable_until': "2024-09-29",
+                'withdraw_reason': None,
                 'request_reason': "Sick"
                 }, {
                 'request_id': 2,
@@ -109,7 +109,7 @@ class TestStaffRequests(TestApp):
                 'is_pm': True,
                 "request_status": "Pending",
                 'apply_date': "2024-09-30",
-                'withdrawable_until': "2024-10-15",
+                'withdraw_reason': None,
                 'request_reason': "Sick"
                 }]
             )
@@ -142,7 +142,7 @@ class TestStaffRequests(TestApp):
                 'is_pm': True,
                 "request_status": "Pending",
                 'apply_date': "2024-09-30",
-                'withdrawable_until': "2024-10-15",
+                'withdraw_reason': None,
                 'request_reason': "Sick"
                 }]
             )

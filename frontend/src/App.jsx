@@ -13,7 +13,7 @@ import WFHRequestForm from './components/apply/WFHRequestForm';
 import WithdrawalFormView from './pages/WithdrawalFormView';
 import { useLocation } from 'react-router-dom';
 import './App.css';
-import RequestsView from './pages/RequestsView';
+import StaffRequestsView from './pages/StaffRequestsView';
 
 function App() {
   return (
@@ -35,6 +35,7 @@ function App() {
               <Route path="/Staff/WFHRequestForm" element={<WFHRequestForm/>}/>
                 
               <Route path="/:staffId/Staff/Application/Requests" element={<RequestsView />} />
+
               <Route path="/:staffId/Staff/Withdrawal" element={<WithdrawalFormView />} />
               <Route path="*" element={<div>404 Not Found</div>} />
 
