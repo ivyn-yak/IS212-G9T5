@@ -34,7 +34,7 @@ function App() {
               <Route path="/Manager/PendingRequests" element={<PendingRequests/>}/>
               <Route path="/Staff/WFHRequestForm" element={<WFHRequestForm/>}/>
                 
-              <Route path="/:staffId/Staff/Application/Requests" element={<RequestsView />} />
+              <Route path="/:staffId/Staff/Application/Requests" element={<StaffRequestsView />} />
 
               <Route path="/:staffId/Staff/Withdrawal" element={<WithdrawalFormView />} />
               <Route path="*" element={<div>404 Not Found</div>} />
