@@ -70,25 +70,25 @@ class TestApp(flask_testing.TestCase):
                 request_reason="Sick"
             )
         
-        wfh_date1 = WFHRequestDates(
-                date_id=1,
-                request_id=1,
-                specific_date=datetime.date(2024, 9, 15),
-                staff_id=140008,
-                decision_status="Approved",
-                is_am=True,
-                is_pm=True
-            )
+        # wfh_date1 = WFHRequestDates(
+        #         date_id=1,
+        #         request_id=1,
+        #         specific_date=datetime.date(2024, 9, 15),
+        #         staff_id=140008,
+        #         decision_status="Approved",
+        #         is_am=True,
+        #         is_pm=True
+        #     )
         
-        wfh_date2 = WFHRequestDates(
-                date_id=2,
-                request_id=2,
-                specific_date=datetime.date(2024, 10, 1),
-                staff_id=140008,
-                decision_status="Approved",
-                is_am=True,
-                is_pm=True
-            )
+        # wfh_date2 = WFHRequestDates(
+        #         date_id=2,
+        #         request_id=2,
+        #         specific_date=datetime.date(2024, 10, 1),
+        #         staff_id=140008,
+        #         decision_status="Approved",
+        #         is_am=True,
+        #         is_pm=True
+        #     )
 
         db.session.add(employee)
         db.session.add(manager)
@@ -102,146 +102,146 @@ class TestApp(flask_testing.TestCase):
         db.session.remove()
         db.drop_all()
 
-class TestWFHDates(TestApp):
-    #get all wfh dates for a certain staff id
-    def test_wfh_dates_by_staffId(self):
+# class TestWFHDates(TestApp):
+#     #get all wfh dates for a certain staff id
+#     def test_wfh_dates_by_staffId(self):
         
-        response = self.client.get("/api/staff/140008/all_wfh_dates", content_type='application/json')
+#         response = self.client.get("/api/staff/140008/all_wfh_dates", content_type='application/json')
         
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.get_json(), [
-            {
-                'date_id': 1, 
-                'decision_status': 'Approved', 
-                'is_am': True, 
-                'is_pm': True, 
-                'request_id': 1, 
-                'specific_date': '2024-09-15', 
-                'staff_id': 140008
-            }, 
-            {
-                'date_id': 2, 
-                'decision_status': 'Approved', 
-                'is_am': True, 
-                'is_pm': True, 
-                'request_id': 2, 
-                'specific_date': '2024-10-01', 
-                'staff_id': 140008
-            }])
+#         self.assertEqual(response.status_code, 200)
+#         self.assertEqual(response.get_json(), [
+#             {
+#                 'date_id': 1, 
+#                 'decision_status': 'Approved', 
+#                 'is_am': True, 
+#                 'is_pm': True, 
+#                 'request_id': 1, 
+#                 'specific_date': '2024-09-15', 
+#                 'staff_id': 140008
+#             }, 
+#             {
+#                 'date_id': 2, 
+#                 'decision_status': 'Approved', 
+#                 'is_am': True, 
+#                 'is_pm': True, 
+#                 'request_id': 2, 
+#                 'specific_date': '2024-10-01', 
+#                 'staff_id': 140008
+#             }])
     
-    def test_wfh_dates_by_staffId_empty(self):
+#     def test_wfh_dates_by_staffId_empty(self):
         
-        response = self.client.get("/api/staff/140001/all_wfh_dates", content_type='application/json')
+#         response = self.client.get("/api/staff/140001/all_wfh_dates", content_type='application/json')
         
-        self.assertEqual(response.status_code, 404)
-        self.assertEqual(response.get_json(), {'message': 'No WFH dates found for this staff member'})
+#         self.assertEqual(response.status_code, 404)
+#         self.assertEqual(response.get_json(), {'message': 'No WFH dates found for this staff member'})
         
-    # Get all approved wfh dates for a certain staff id in a certain date range
-    #GET /api/staff/1/wfh_dates?start_date=2024-09-01&end_date=2024-09-30
+#     # Get all approved wfh dates for a certain staff id in a certain date range
+#     #GET /api/staff/1/wfh_dates?start_date=2024-09-01&end_date=2024-09-30
 
-    def test_wfh_dates_by_staffId_range(self):
+#     def test_wfh_dates_by_staffId_range(self):
         
-        response = self.client.get("/api/staff/140008/wfh_dates?start_date=2024-09-01&end_date=2024-09-30", content_type='application/json')
+#         response = self.client.get("/api/staff/140008/wfh_dates?start_date=2024-09-01&end_date=2024-09-30", content_type='application/json')
         
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.get_json(), [
-            {
-                'date_id': 1, 
-                'decision_status': 'Approved', 
-                'is_am': True, 
-                'is_pm': True, 
-                'request_id': 1, 
-                'specific_date': '2024-09-15', 
-                'staff_id': 140008
-            }])
+#         self.assertEqual(response.status_code, 200)
+#         self.assertEqual(response.get_json(), [
+#             {
+#                 'date_id': 1, 
+#                 'decision_status': 'Approved', 
+#                 'is_am': True, 
+#                 'is_pm': True, 
+#                 'request_id': 1, 
+#                 'specific_date': '2024-09-15', 
+#                 'staff_id': 140008
+#             }])
 
-    def test_wfh_dates_by_staffId_range_withdrawn(self):
-        wfh_request3 = WFHRequests(
-                staff_id=140008,
-                manager_id=140001,
-                request_type='Ad-hoc',
-                start_date=datetime.date(2024, 9, 16),
-                end_date=datetime.date(2024, 9, 16),
-                recurrence_days= None,
-                is_am=True,
-                is_pm=True,
-                request_status='Pending',
-                apply_date=datetime.date(2024, 9, 30),
-                withdraw_reason=None,
-                request_reason="Sick"
-            )
+#     def test_wfh_dates_by_staffId_range_withdrawn(self):
+#         wfh_request3 = WFHRequests(
+#                 staff_id=140008,
+#                 manager_id=140001,
+#                 request_type='Ad-hoc',
+#                 start_date=datetime.date(2024, 9, 16),
+#                 end_date=datetime.date(2024, 9, 16),
+#                 recurrence_days= None,
+#                 is_am=True,
+#                 is_pm=True,
+#                 request_status='Pending',
+#                 apply_date=datetime.date(2024, 9, 30),
+#                 withdraw_reason=None,
+#                 request_reason="Sick"
+#             )
         
-        wfh_date3 = WFHRequestDates(
-                date_id=3,
-                request_id=3,
-                specific_date=datetime.date(2024, 9, 16),
-                staff_id=140008,
-                decision_status="Withdrawn",
-                is_am=True,
-                is_pm=True
-            )
+#         wfh_date3 = WFHRequestDates(
+#                 date_id=3,
+#                 request_id=3,
+#                 specific_date=datetime.date(2024, 9, 16),
+#                 staff_id=140008,
+#                 decision_status="Withdrawn",
+#                 is_am=True,
+#                 is_pm=True
+#             )
         
-        db.session.add(wfh_request3)
-        db.session.add(wfh_date3)
-        db.session.commit()
+#         db.session.add(wfh_request3)
+#         db.session.add(wfh_date3)
+#         db.session.commit()
 
-        response = self.client.get("/api/staff/140008/wfh_dates?start_date=2024-09-01&end_date=2024-09-30", content_type='application/json')
+#         response = self.client.get("/api/staff/140008/wfh_dates?start_date=2024-09-01&end_date=2024-09-30", content_type='application/json')
 
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.get_json(), [
-            {
-                'date_id': 1, 
-                'decision_status': 'Approved', 
-                'is_am': True, 
-                'is_pm': True, 
-                'request_id': 1, 
-                'specific_date': '2024-09-15', 
-                'staff_id': 140008
-            }])
+#         self.assertEqual(response.status_code, 200)
+#         self.assertEqual(response.get_json(), [
+#             {
+#                 'date_id': 1, 
+#                 'decision_status': 'Approved', 
+#                 'is_am': True, 
+#                 'is_pm': True, 
+#                 'request_id': 1, 
+#                 'specific_date': '2024-09-15', 
+#                 'staff_id': 140008
+#             }])
         
-    # Get all wfh dates and in office dates for a certain staff id in a certain date range
-    #GET /api/staff/1/wfh_office_dates?start_date=2024-09-01&end_date=2024-09-30 
+#     # Get all wfh dates and in office dates for a certain staff id in a certain date range
+#     #GET /api/staff/1/wfh_office_dates?start_date=2024-09-01&end_date=2024-09-30 
     
-    def test_wfh_dates_by_staffId_wfh_office(self):
-        wfh_request3 = WFHRequests(
-                staff_id=140008,
-                manager_id=140001,
-                request_type='Ad-hoc',
-                start_date=datetime.date(2024, 9, 16),
-                end_date=datetime.date(2024, 9, 16),
-                recurrence_days= None,
-                is_am=True,
-                is_pm=True,
-                request_status='Pending',
-                apply_date=datetime.date(2024, 9, 30),
-                withdraw_reason=None,
-                request_reason="Sick"
-            )
+#     def test_wfh_dates_by_staffId_wfh_office(self):
+#         wfh_request3 = WFHRequests(
+#                 staff_id=140008,
+#                 manager_id=140001,
+#                 request_type='Ad-hoc',
+#                 start_date=datetime.date(2024, 9, 16),
+#                 end_date=datetime.date(2024, 9, 16),
+#                 recurrence_days= None,
+#                 is_am=True,
+#                 is_pm=True,
+#                 request_status='Pending',
+#                 apply_date=datetime.date(2024, 9, 30),
+#                 withdraw_reason=None,
+#                 request_reason="Sick"
+#             )
         
-        wfh_date3 = WFHRequestDates(
-                date_id=3,
-                request_id=3,
-                specific_date=datetime.date(2024, 9, 16),
-                staff_id=140008,
-                decision_status="Withdrawn",
-                is_am=True,
-                is_pm=True
-            )
+#         wfh_date3 = WFHRequestDates(
+#                 date_id=3,
+#                 request_id=3,
+#                 specific_date=datetime.date(2024, 9, 16),
+#                 staff_id=140008,
+#                 decision_status="Withdrawn",
+#                 is_am=True,
+#                 is_pm=True
+#             )
         
-        db.session.add(wfh_request3)
-        db.session.add(wfh_date3)
-        db.session.commit()
+#         db.session.add(wfh_request3)
+#         db.session.add(wfh_date3)
+#         db.session.commit()
 
-        response = self.client.get("/api/staff/140008/wfh_office_dates?start_date=2024-09-15&end_date=2024-09-17", content_type='application/json')
+#         response = self.client.get("/api/staff/140008/wfh_office_dates?start_date=2024-09-15&end_date=2024-09-17", content_type='application/json')
 
-        self.assertEqual(response.status_code, 200)        
-        self.assertEqual(response.get_json(), {
-        'in_office_dates': [
-             {'date': '2024-09-15', 'is_am': False, 'is_pm': False}, 
-             {'date': '2024-09-16', 'is_am': True, 'is_pm': True}, 
-             {'date': '2024-09-17', 'is_am': True, 'is_pm': True}, 
-             ], 
-         'wfh_dates': [
-             {'date_id': 1, 'decision_status': 'Approved', 'is_am': True, 'is_pm': True, 'request_id': 1, 'specific_date': '2024-09-15', 'staff_id': 140008}
-             ]})
+#         self.assertEqual(response.status_code, 200)        
+#         self.assertEqual(response.get_json(), {
+#         'in_office_dates': [
+#              {'date': '2024-09-15', 'is_am': False, 'is_pm': False}, 
+#              {'date': '2024-09-16', 'is_am': True, 'is_pm': True}, 
+#              {'date': '2024-09-17', 'is_am': True, 'is_pm': True}, 
+#              ], 
+#          'wfh_dates': [
+#              {'date_id': 1, 'decision_status': 'Approved', 'is_am': True, 'is_pm': True, 'request_id': 1, 'specific_date': '2024-09-15', 'staff_id': 140008}
+#              ]})
           

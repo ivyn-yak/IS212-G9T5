@@ -1,5 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import *
+import datetime
 
 db = SQLAlchemy()
 
@@ -32,38 +33,34 @@ class Employee(db.Model):
     
 # WFHRequests Table 
 class WFHRequests(db.Model):
-    __tablename__ = 'work_from_home_requests'
+    __tablename__ = 'wfhrequests'
 
-    request_id = Column(Integer, primary_key=True)
+    request_id = Column(Integer, nullable=False)
     staff_id = Column(Integer, ForeignKey('employee.staff_id'), nullable=False)
-    manager_id = Column(Integer, ForeignKey('employee.staff_id'), nullable=False)
-    request_type = Column(Enum('Ad-hoc', 'Recurring', name='request_type'), nullable=False)  # Ad-hoc or Recurring
-    start_date = Column(Date, nullable=False)  
-    end_date = Column(Date, nullable=False)    
-    recurrence_days = Column(String, nullable=True)  # Only for recurring, stores the day of the week (e.g. 'Monday')
+    manager_id = Column(Integer, ForeignKey('employee.staff_id'), nullable=False)  
+    specific_date = Column(Date, nullable=False)    
     is_am = Column(Boolean, nullable=False, default=False)  # Is AM selected?
     is_pm = Column(Boolean, nullable=False, default=False)  # Is PM selected?
     request_status = Column(Enum('Pending', 'Approved', 'Rejected', 'Cancelled', 'Withdrawn', 'Pending_Withdraw', name='request_status'), nullable=False)
     apply_date = Column(Date, nullable=False)
-    withdraw_reason = Column(String, nullable=True)
-    request_reason = Column(String, nullable=True)
+    request_reason = Column(Text, nullable=True)
 
     employee = db.relationship('Employee', foreign_keys=[staff_id])
+    
+    __table_args__ = (
+        PrimaryKeyConstraint('request_id', 'specific_date'),
+    )
 
     def json(self):
         return {
             "request_id": self.request_id,
             "staff_id": self.staff_id,
             "manager_id": self.manager_id,
-            "request_type": self.request_type,
-            "start_date": str(self.start_date),
-            "end_date": str(self.end_date),
-            "recurrence_days": self.recurrence_days,  # Day of the week for recurring requests
+            "specific_date": str(self.specific_date),
             "is_am": self.is_am,
             "is_pm": self.is_pm,
             "request_status": self.request_status,
             "apply_date": str(self.apply_date),
-            "withdraw_reason": self.withdraw_reason,
             "request_reason": self.request_reason
         }
 
@@ -72,14 +69,14 @@ class RequestDecisions(db.Model):
     __tablename__ = 'requestdecisions'
 
     decision_id = Column(Integer, primary_key=True)
-    request_id = Column(Integer, ForeignKey('work_from_home_requests.request_id'), nullable=False)
+    request_id = Column(Integer, ForeignKey('wfhrequests.request_id'), nullable=False)
     manager_id = Column(Integer, ForeignKey('employee.staff_id'), nullable=False)  # Manager who made the decision
     decision_date = Column(Date, nullable=False)
     decision_status = Column(Enum('Approved', 'Rejected', name='decision_status'), nullable=False)
     decision_notes = Column(Text, nullable=True)
 
-    work_from_home_request = db.relationship('WFHRequests')
     manager = db.relationship('Employee', foreign_keys=[manager_id])
+    work_from_home_request = db.relationship('WFHRequests')
 
     def json(self):
         return {
@@ -91,28 +88,64 @@ class RequestDecisions(db.Model):
             "decision_notes": self.decision_notes
         }
     
-# WFHRequestDates Table (Stores the specific dates for both Ad-hoc and Recurring requests)
-class WFHRequestDates(db.Model):
-    __tablename__ = 'work_from_home_request_dates'
+# WithdrawDecisions Table (Stores the decision made by the manager for the withdraw requests)
+class WithdrawDecisions(db.Model):
+    __tablename__ = 'withdrawdecisions'
 
-    date_id = Column(Integer, primary_key=True)
-    request_id = Column(Integer, ForeignKey('work_from_home_requests.request_id'), nullable=False)
-    specific_date = Column(Date, nullable=False)  # The specific work-from-home date
-    staff_id = Column(Integer, ForeignKey('employee.staff_id'), nullable=False)
-    decision_status = Column(Enum('Approved', 'Rejected', 'Withdrawn', name='decision_status'), nullable=False)
-    is_am = Column(Boolean, nullable=False, default=False)  # Is AM selected for this date?
-    is_pm = Column(Boolean, nullable=False, default=False)  # Is PM selected for this date?
+    withdraw_decision_id = Column(Integer, primary_key=True)
+    specific_date = Column(Date, nullable=False)
+    request_id = Column(Integer, nullable=False)
+    manager_id = Column(Integer, ForeignKey('employee.staff_id'), nullable=False)  # Manager who made the decision
+    decision_date = Column(Date, nullable=False)
+    decision_status = Column(Enum('Approved', 'Rejected', name='decision_status'), nullable=False)
+    decision_notes = Column(Text, nullable=True)
 
-    work_from_home_request = db.relationship('WFHRequests')
-    employee = db.relationship('Employee')
+    manager = db.relationship('Employee', foreign_keys=[manager_id])
+    work_from_home_request = db.relationship(
+        'WFHRequests', 
+        foreign_keys=[request_id, specific_date], 
+        primaryjoin='and_(WithdrawDecisions.request_id == WFHRequests.request_id, WithdrawDecisions.specific_date == WFHRequests.specific_date)'
+    )
 
     def json(self):
         return {
-            "date_id": self.date_id,
+            "withdraw_decision_id": self.withdraw_decision_id,
+            "specific_date": str(self.specific_date),
+            "request_id": self.request_id,
+            "manager_id": self.manager_id,
+            "decision_date": str(self.decision_date),
+            "decision_status": self.decision_status,
+            "decision_notes": self.decision_notes
+        }
+    
+# WFHRequestLogs Table (Stores the changes made to WFHRequest)
+class WFHRequestLogs(db.Model):
+    __tablename__ = 'wfhrequestlogs'
+
+    log_datetime = Column(DateTime, nullable=False)
+    request_id = Column(Integer, ForeignKey('wfhrequests.request_id'), nullable=False)
+    specific_date = Column(Date, ForeignKey('wfhrequests.specific_date'), nullable=False)  # The specific work-from-home date
+    request_status = Column(Enum('Pending', 'Approved', 'Rejected', 'Cancelled', 'Withdrawn', 'Pending_Withdraw', name='request_status'), nullable=False)
+    apply_log_date = Column(Date, nullable=False) # Updates when is Pending or Pending_Withdraw
+    reason_log = Column(Text, nullable=True)
+
+    work_from_home_request = db.relationship(
+        'WFHRequests', 
+        foreign_keys=[request_id, specific_date],
+        primaryjoin='and_(WFHRequestLogs.request_id == WFHRequests.request_id, WFHRequestLogs.specific_date == WFHRequests.specific_date)'
+    )
+
+    __table_args__ = (
+        PrimaryKeyConstraint('log_datetime', 'request_id'),
+    )
+
+    def json(self):
+        return {
+            "log_datetime": str(self.log_datetime),
             "request_id": self.request_id,
             "specific_date": str(self.specific_date),
-            "staff_id": self.staff_id,
-            "decision_status": self.decision_status,
-            "is_am": self.is_am,
-            "is_pm": self.is_pm
+            "request_status": self.request_status,
+            "apply_log_date": str(self.apply_log_date),
+            "reason_log": self.reason_log
         }
+    

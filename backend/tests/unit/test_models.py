@@ -1,5 +1,4 @@
 import unittest
-from unittest.mock import patch
 from models import *
 import datetime
 
@@ -34,15 +33,11 @@ class TestWFHRequests(unittest.TestCase):
         req = WFHRequests(
             staff_id=140008,
             manager_id=140001,
-            request_type="Ad-hoc",  
-            start_date=datetime.date(2024, 9, 15),  
-            end_date=datetime.date(2024, 9, 15),
-            recurrence_days="",
+            specific_date=datetime.date(2024, 9, 15),  
             is_am=True,
             is_pm=True, 
             request_status= "Pending",  
             apply_date=datetime.date(2024, 9, 30),
-            withdraw_reason=None,
             request_reason="Sick"
             )
 
@@ -50,55 +45,69 @@ class TestWFHRequests(unittest.TestCase):
             'request_id': None,
             'staff_id': 140008,
             'manager_id': 140001,
-            'request_type': 'Ad-hoc',
-            'start_date': "2024-09-15",
-            'end_date': "2024-09-15",
-            'recurrence_days': '',
+            'specific_date': "2024-09-15",
             'is_am': True,
             'is_pm': True,
             "request_status": "Pending",
             'apply_date': "2024-09-30",
-            'withdraw_reason': None,
             'request_reason': "Sick"
         })
 
-class TestWFHRequestDates(unittest.TestCase):
+class TestWFHRequestLogs(unittest.TestCase):
     def test_json(self):
-        date = WFHRequestDates(
+        
+        date = WFHRequestLogs(
+            log_datetime=datetime.datetime(2024, 12, 12, 0, 30, 0),
             request_id=1, 
             specific_date=datetime.date(2024, 9, 15),
-            staff_id=140008, 
-            decision_status="Approved",
-            is_am=True,
-            is_pm=True
+            request_status="Approved",
+            apply_log_date=datetime.date(2024, 9, 18),
+            reason_log="Tired"
             )
         
         self.assertEqual(date.json(), {
-            "date_id": None,
+            "log_datetime": "2024-12-12 00:30:00",
             "request_id": 1,
             "specific_date": "2024-09-15",
-            "staff_id": 140008,
-            "decision_status": "Approved",
-            "is_am": True,
-            "is_pm": True
+            "request_status": "Approved",
+            "apply_log_date": "2024-09-18",
+            "reason_log": "Tired"
         })
 
-@patch('util.request_decisions.datetime')
 class TestRequestDecisions(unittest.TestCase):
-    def test_json(self, mock_datetime):
-        mock_datetime.today.return_value = datetime.date(2024, 12, 12)
-
+    def test_json(self):
         decision = RequestDecisions(
             request_id=1,
             manager_id=140001,
             decision_status="Approved",
-            decision_date=mock_datetime.today(),
+            decision_date=datetime.date(2024, 12, 12),
             decision_notes="Ok"
             )
         
-        self.assertEqual(decision.decision_date, datetime.date(2024, 12, 12))
         self.assertEqual(decision.json(), {
             "decision_id": None,
+            "request_id": 1,
+            "manager_id": 140001,
+            "decision_date": "2024-12-12",
+            "decision_status": "Approved",
+            "decision_notes": "Ok"
+        })
+
+class TestWithdrawDecisions(unittest.TestCase):
+    def test_json(self):
+
+        decision = WithdrawDecisions(
+            specific_date=datetime.date(2024, 9, 15),
+            request_id=1,
+            manager_id=140001,
+            decision_status="Approved",
+            decision_date=datetime.date(2024, 12, 12),
+            decision_notes="Ok"
+            )
+        
+        self.assertEqual(decision.json(), {
+            "withdraw_decision_id": None,
+            "specific_date": "2024-09-15",
             "request_id": 1,
             "manager_id": 140001,
             "decision_date": "2024-12-12",
