@@ -1,4 +1,6 @@
 import unittest
+from unittest.mock import patch
+import datetime
 import flask_testing
 import json
 from server import app, db
@@ -38,101 +40,124 @@ class TestApp(flask_testing.TestCase):
             role=1
         )
 
+        wfh_request = WFHRequests(
+            request_id = "1",
+            staff_id=140008,
+            manager_id=140001,
+            specific_date=datetime.date(2024, 9, 20),
+            is_am=True,
+            is_pm=True,
+            request_status='Pending',
+            apply_date=datetime.date(2024, 9, 30),
+            request_reason="Sick"
+        )
+
         db.session.add(employee)
         db.session.add(manager)
+        db.session.add(wfh_request)
         db.session.commit()
 
     def tearDown(self):
         db.session.remove()
         db.drop_all()
 
-# class TestStaffApply(TestApp):
-#     def test_staff_apply_adhoc_invalid_json(self):
-#         request_body = {}
+class TestStaffApply(TestApp):
+    def test_staff_apply_adhoc_invalid_json(self):
+        request_body = {}
 
-#         response = self.client.post("/api/apply",
-#                                     data=json.dumps(request_body),
-#                                     content_type='application/json')
+        response = self.client.post("/api/apply",
+                                    data=json.dumps(request_body),
+                                    content_type='application/json')
         
-#         self.assertEqual(response.get_json(), {"error": "Invalid JSON or no data provided"})
+        self.assertEqual(response.get_json(), {"error": "Invalid JSON or no data provided"})
 
-#     def test_staff_apply_adhoc(self):
+    @patch('util.staff_apply.uuid.uuid4')
+    def test_staff_apply_adhoc(self, mock_uuid):
+        mock_uuid.return_value = uuid.UUID('12345678-1234-5678-1234-567812345678')
 
-#         request_body = {
-#             'staff_id': 140008,
-#             'request_type': 'Ad-hoc',
-#             'start_date': "2024-09-15",
-#             'end_date': "2024-09-15",
-#             'recurrence_days': None,
-#             'is_am': True,
-#             'is_pm': True,
-#             'apply_date': "2024-09-30",
-#             'request_reason': "Sick"
-#         }
+        request_body = {
+            'staff_id': 140008,
+            'request_type': 'Ad-hoc',
+            'specific_date': "2024-09-15",
+            'is_am': True,
+            'is_pm': True,
+            'apply_date': "2024-09-30",
+            'request_reason': "Sick"
+        }
 
-#         response = self.client.post("/api/apply",
-#                                     data=json.dumps(request_body),
-#                                     content_type='application/json')
+        response = self.client.post("/api/apply",
+                                    data=json.dumps(request_body),
+                                    content_type='application/json')
+                
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.get_json(), {
+            "message": "Ad-hoc request successfully created.",
+            "request": {
+                'request_id': '12345678-1234-5678-1234-567812345678',
+                'staff_id': 140008,
+                'manager_id': 140001,
+                'specific_date': "2024-09-15",
+                'is_am': True,
+                'is_pm': True,
+                "request_status": "Pending",
+                'apply_date': "2024-09-30",
+                'request_reason': "Sick"
+                }
+            })
         
-#         self.assertEqual(response.status_code, 201)
-#         self.assertEqual(response.get_json(), {
-#             "message": "Ad-hoc request successfully created.",
-#             "request": {
-#                 'request_id': 1,
-#                 'staff_id': 140008,
-#                 'manager_id': 140001,
-#                 'request_type': 'Ad-hoc',
-#                 'start_date': "2024-09-15",
-#                 'end_date': "2024-09-15",
-#                 'recurrence_days': None,
-#                 'is_am': True,
-#                 'is_pm': True,
-#                 "request_status": "Pending",
-#                 'apply_date': "2024-09-30",
-#                 'withdraw_reason': None,
-#                 'request_reason': "Sick"
-#                 }
-#             })
-        
-#     def test_staff_apply_invalid_staff(self):
-#         request_body = {
-#             'staff_id': 0,
-#             'request_type': 'Ad-hoc',
-#             'start_date': "2024-09-15",
-#             'end_date': "2024-09-15",
-#             'recurrence_days': None,
-#             'is_am': True,
-#             'is_pm': True,
-#             'apply_date': "2024-09-30",
-#             'request_reason': "Sick"
-#         }
+    def test_staff_apply_invalid_staff(self):
+        request_body = {
+            'staff_id': 0,
+            'request_type': 'Ad-hoc',
+            'specific_date': "2024-09-15",
+            'is_am': True,
+            'is_pm': True,
+            'apply_date': "2024-09-30",
+            'request_reason': "Sick"
+        }
 
-#         response = self.client.post("/api/apply",
-#                                     data=json.dumps(request_body),
-#                                     content_type='application/json')
+        response = self.client.post("/api/apply",
+                                    data=json.dumps(request_body),
+                                    content_type='application/json')
         
-#         self.assertEqual(response.status_code, 404)
-#         self.assertEqual(response.get_json(), {"error": "Staff not found"})
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.get_json(), {"error": "Staff not found"})
 
-#     def test_staff_apply_invalid_request_type(self):
-#         request_body = {
-#             'staff_id': 140008,
-#             'request_type': 'Wrong Type',
-#             'start_date': "2024-09-15",
-#             'end_date': "2024-09-15",
-#             'recurrence_days': None,
-#             'is_am': True,
-#             'is_pm': True,
-#             'apply_date': "2024-09-30",
-#             'request_reason': "Sick"
-#         }
+    def test_staff_apply_invalid_request_type(self):
+        request_body = {
+            'staff_id': 140008,
+            'request_type': 'Wrong Type',
+            'specific_date': "2024-09-15",
+            'is_am': True,
+            'is_pm': True,
+            'apply_date': "2024-09-30",
+            'request_reason': "Sick"
+        }
 
-#         response = self.client.post("/api/apply",
-#                                     data=json.dumps(request_body),
-#                                     content_type='application/json')
+        response = self.client.post("/api/apply",
+                                    data=json.dumps(request_body),
+                                    content_type='application/json')
         
-#         self.assertEqual(response.status_code, 400)
-#         self.assertEqual(response.get_json(), {"error": "Invalid request type"})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_json(), {"error": "Invalid request type"})
+
+    def test_staff_apply_existing_request(self):
+        request_body = {
+            'staff_id': 140008,
+            'request_type': 'Ad-hoc',
+            'specific_date': "2024-09-20",
+            'is_am': True,
+            'is_pm': True,
+            'apply_date': "2024-09-30",
+            'request_reason': "Sick"
+        }
+
+        response = self.client.post("/api/apply",
+                                    data=json.dumps(request_body),
+                                    content_type='application/json')
+        
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_json(), {"error": f"Staff has an existing request for 2024-09-20"})
 
 #     def test_staff_apply_recurring_invalid_json(self):
 #             request_body = {}

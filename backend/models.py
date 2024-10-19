@@ -1,6 +1,7 @@
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import *
-import datetime
+from sqlalchemy.dialects.postgresql import UUID
+import uuid
 
 db = SQLAlchemy()
 
@@ -35,7 +36,7 @@ class Employee(db.Model):
 class WFHRequests(db.Model):
     __tablename__ = 'wfhrequests'
 
-    request_id = Column(Integer, nullable=False)
+    request_id = Column(String, nullable=False)
     staff_id = Column(Integer, ForeignKey('employee.staff_id'), nullable=False)
     manager_id = Column(Integer, ForeignKey('employee.staff_id'), nullable=False)  
     specific_date = Column(Date, nullable=False)    
@@ -53,7 +54,7 @@ class WFHRequests(db.Model):
 
     def json(self):
         return {
-            "request_id": self.request_id,
+            "request_id": str(self.request_id),
             "staff_id": self.staff_id,
             "manager_id": self.manager_id,
             "specific_date": str(self.specific_date),
@@ -69,7 +70,7 @@ class RequestDecisions(db.Model):
     __tablename__ = 'requestdecisions'
 
     decision_id = Column(Integer, primary_key=True)
-    request_id = Column(Integer, ForeignKey('wfhrequests.request_id'), nullable=False)
+    request_id = Column(String, ForeignKey('wfhrequests.request_id'), nullable=False)
     manager_id = Column(Integer, ForeignKey('employee.staff_id'), nullable=False)  # Manager who made the decision
     decision_date = Column(Date, nullable=False)
     decision_status = Column(Enum('Approved', 'Rejected', name='decision_status'), nullable=False)
@@ -81,7 +82,7 @@ class RequestDecisions(db.Model):
     def json(self):
         return {
             "decision_id": self.decision_id,
-            "request_id": self.request_id,
+            "request_id": str(self.request_id),
             "manager_id": self.manager_id,
             "decision_date": str(self.decision_date),
             "decision_status": self.decision_status,
@@ -94,7 +95,7 @@ class WithdrawDecisions(db.Model):
 
     withdraw_decision_id = Column(Integer, primary_key=True)
     specific_date = Column(Date, nullable=False)
-    request_id = Column(Integer, nullable=False)
+    request_id = Column(String, nullable=False)
     manager_id = Column(Integer, ForeignKey('employee.staff_id'), nullable=False)  # Manager who made the decision
     decision_date = Column(Date, nullable=False)
     decision_status = Column(Enum('Approved', 'Rejected', name='decision_status'), nullable=False)
@@ -111,7 +112,7 @@ class WithdrawDecisions(db.Model):
         return {
             "withdraw_decision_id": self.withdraw_decision_id,
             "specific_date": str(self.specific_date),
-            "request_id": self.request_id,
+            "request_id": str(self.request_id),
             "manager_id": self.manager_id,
             "decision_date": str(self.decision_date),
             "decision_status": self.decision_status,
@@ -123,7 +124,7 @@ class WFHRequestLogs(db.Model):
     __tablename__ = 'wfhrequestlogs'
 
     log_datetime = Column(DateTime, nullable=False)
-    request_id = Column(Integer, ForeignKey('wfhrequests.request_id'), nullable=False)
+    request_id = Column(String, ForeignKey('wfhrequests.request_id'), nullable=False)
     specific_date = Column(Date, ForeignKey('wfhrequests.specific_date'), nullable=False)  # The specific work-from-home date
     request_status = Column(Enum('Pending', 'Approved', 'Rejected', 'Cancelled', 'Withdrawn', 'Pending_Withdraw', name='request_status'), nullable=False)
     apply_log_date = Column(Date, nullable=False) # Updates when is Pending or Pending_Withdraw
@@ -142,7 +143,7 @@ class WFHRequestLogs(db.Model):
     def json(self):
         return {
             "log_datetime": str(self.log_datetime),
-            "request_id": self.request_id,
+            "request_id": str(self.request_id),
             "specific_date": str(self.specific_date),
             "request_status": self.request_status,
             "apply_log_date": str(self.apply_log_date),

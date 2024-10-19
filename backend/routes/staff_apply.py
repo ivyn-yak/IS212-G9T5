@@ -9,7 +9,7 @@ def staff_apply():
     if not data:
         return jsonify({"error": "Invalid JSON or no data provided"}), 400
     
-    required_fields = ["staff_id", "start_date", "end_date", "is_am", "is_pm", "apply_date"]
+    required_fields = ["staff_id", "request_type", "specific_date", "is_am", "is_pm", "apply_date", "request_reason"]
     for field in required_fields:
         if field not in data:
             return jsonify({"error": f"Missing '{field}' in request"}), 400
