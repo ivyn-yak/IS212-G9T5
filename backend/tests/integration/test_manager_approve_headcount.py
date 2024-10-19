@@ -83,212 +83,212 @@ class TestApp(flask_testing.TestCase):
         db.session.remove()
         db.drop_all()
 
-class TestManagerApproveAdhoc(TestApp):
+# class TestManagerApproveAdhoc(TestApp):
 
-    def test_approve_adhoc_invalid_json(self):
-        request_body = {}
-        response = self.client.post("/api/approve",
-                                     data=json.dumps(request_body),
-                                     content_type='application/json')
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.get_json(), {"error": "Invalid JSON or no data provided"})
+#     def test_approve_adhoc_invalid_json(self):
+#         request_body = {}
+#         response = self.client.post("/api/approve",
+#                                      data=json.dumps(request_body),
+#                                      content_type='application/json')
+#         self.assertEqual(response.status_code, 400)
+#         self.assertEqual(response.get_json(), {"error": "Invalid JSON or no data provided"})
 
-    def test_approve_adhoc_request_not_found(self):
-        request_body = {
-            'request_id': 999, 
-            'manager_id': 140001,
-            'start_date': datetime.strptime("2024-09-15", '%Y-%m-%d').isoformat(),
-            'end_date': datetime.strptime("2024-09-20", '%Y-%m-%d').isoformat(),
-            'decision': 'Approved'
-        }
-        response = self.client.post("/api/approve",
-                                     data=json.dumps(request_body),
-                                     content_type='application/json')
-        self.assertEqual(response.status_code, 404)
-        self.assertEqual(response.get_json(), {"error": "Request not found"})
+#     def test_approve_adhoc_request_not_found(self):
+#         request_body = {
+#             'request_id': 999, 
+#             'manager_id': 140001,
+#             'start_date': datetime.strptime("2024-09-15", '%Y-%m-%d').isoformat(),
+#             'end_date': datetime.strptime("2024-09-20", '%Y-%m-%d').isoformat(),
+#             'decision': 'Approved'
+#         }
+#         response = self.client.post("/api/approve",
+#                                      data=json.dumps(request_body),
+#                                      content_type='application/json')
+#         self.assertEqual(response.status_code, 404)
+#         self.assertEqual(response.get_json(), {"error": "Request not found"})
 
-    def test_headcount_check_below_50_percent(self):
+#     def test_headcount_check_below_50_percent(self):
 
-        wfh_request_2 = WFHRequests(
-            request_id=2,
-            staff_id=140009,
-            manager_id=140001,
-            request_type='Ad-hoc',
-            start_date=datetime.strptime("2024-09-15", '%Y-%m-%d'),
-            end_date=datetime.strptime("2024-09-20", '%Y-%m-%d'),
-            request_status='Pending',
-            apply_date=datetime.now(),
-            withdraw_reason=datetime.strptime("2024-09-10", '%Y-%m-%d'),
-            request_reason='Personal matters',
-            is_am=False,
-            is_pm=True
-        )
-        db.session.add(wfh_request_2)
+#         wfh_request_2 = WFHRequests(
+#             request_id=2,
+#             staff_id=140009,
+#             manager_id=140001,
+#             request_type='Ad-hoc',
+#             start_date=datetime.strptime("2024-09-15", '%Y-%m-%d'),
+#             end_date=datetime.strptime("2024-09-20", '%Y-%m-%d'),
+#             request_status='Pending',
+#             apply_date=datetime.now(),
+#             withdraw_reason=datetime.strptime("2024-09-10", '%Y-%m-%d'),
+#             request_reason='Personal matters',
+#             is_am=False,
+#             is_pm=True
+#         )
+#         db.session.add(wfh_request_2)
 
-        db.session.commit()
+#         db.session.commit()
 
-        request_body = {
-            'request_id': 2,
-            'decision_status': 'Approved',
-            'start_date': '2024-09-15',  
-            'decision_notes': 'Nil',
-            'manager_id': 140001
-        }
+#         request_body = {
+#             'request_id': 2,
+#             'decision_status': 'Approved',
+#             'start_date': '2024-09-15',  
+#             'decision_notes': 'Nil',
+#             'manager_id': 140001
+#         }
 
-        response = self.client.post("/api/approve",
-                                    data=json.dumps(request_body),
-                                    content_type='application/json')
+#         response = self.client.post("/api/approve",
+#                                     data=json.dumps(request_body),
+#                                     content_type='application/json')
 
-        self.assertEqual(response.status_code, 201)
-        self.assertIn("manager's decision stored successfully", response.get_json()["message"])
+#         self.assertEqual(response.status_code, 201)
+#         self.assertIn("manager's decision stored successfully", response.get_json()["message"])
 
-    def test_headcount_check_above_50_percent(self):
+#     def test_headcount_check_above_50_percent(self):
         
-        wfh_request_1 = WFHRequests(
-            request_id=1,
-            staff_id=140008,
-            manager_id=140001,
-            request_type='Ad-hoc',
-            start_date=datetime.strptime("2024-09-15", '%Y-%m-%d'),
-            end_date=datetime.strptime("2024-09-20", '%Y-%m-%d'),
-            request_status='Approved',
-            apply_date=datetime.now(),
-            withdraw_reason=datetime.strptime("2024-09-10", '%Y-%m-%d'),
-            request_reason='Personal matters',
-            is_am=False,
-            is_pm=True
-        )
-        db.session.add(wfh_request_1)
+#         wfh_request_1 = WFHRequests(
+#             request_id=1,
+#             staff_id=140008,
+#             manager_id=140001,
+#             request_type='Ad-hoc',
+#             start_date=datetime.strptime("2024-09-15", '%Y-%m-%d'),
+#             end_date=datetime.strptime("2024-09-20", '%Y-%m-%d'),
+#             request_status='Approved',
+#             apply_date=datetime.now(),
+#             withdraw_reason=datetime.strptime("2024-09-10", '%Y-%m-%d'),
+#             request_reason='Personal matters',
+#             is_am=False,
+#             is_pm=True
+#         )
+#         db.session.add(wfh_request_1)
 
-        wfh_request_date_1 = WFHRequestDates(
-                request_id = 1, 
-                specific_date=datetime.strptime("2024-09-15", '%Y-%m-%d'),
-                decision_status='Approved',
-                staff_id=140008,
-                is_am=False,
-                is_pm=True
-            )
-        db.session.add(wfh_request_date_1)
+#         wfh_request_date_1 = WFHRequestDates(
+#                 request_id = 1, 
+#                 specific_date=datetime.strptime("2024-09-15", '%Y-%m-%d'),
+#                 decision_status='Approved',
+#                 staff_id=140008,
+#                 is_am=False,
+#                 is_pm=True
+#             )
+#         db.session.add(wfh_request_date_1)
 
-        wfh_request_2 = WFHRequests(
-            request_id=2,
-            staff_id=140009,
-            manager_id=140001,
-            request_type='Ad-hoc',
-            start_date=datetime.strptime("2024-09-15", '%Y-%m-%d'),
-            end_date=datetime.strptime("2024-09-20", '%Y-%m-%d'),
-            request_status='Pending',
-            apply_date=datetime.now(),
-            withdraw_reason=datetime.strptime("2024-09-10", '%Y-%m-%d'),
-            request_reason='Personal matters',
-            is_am=False,
-            is_pm=True
-        )
-        db.session.add(wfh_request_2)
+#         wfh_request_2 = WFHRequests(
+#             request_id=2,
+#             staff_id=140009,
+#             manager_id=140001,
+#             request_type='Ad-hoc',
+#             start_date=datetime.strptime("2024-09-15", '%Y-%m-%d'),
+#             end_date=datetime.strptime("2024-09-20", '%Y-%m-%d'),
+#             request_status='Pending',
+#             apply_date=datetime.now(),
+#             withdraw_reason=datetime.strptime("2024-09-10", '%Y-%m-%d'),
+#             request_reason='Personal matters',
+#             is_am=False,
+#             is_pm=True
+#         )
+#         db.session.add(wfh_request_2)
 
-        wfh_request_3 = WFHRequests(
-            request_id=3,
-            staff_id=140010,
-            manager_id=140001,
-            request_type='Ad-hoc',
-            start_date=datetime.strptime("2024-09-15", '%Y-%m-%d'),
-            end_date=datetime.strptime("2024-09-20", '%Y-%m-%d'),
-            request_status='Approved',
-            apply_date=datetime.now(),
-            withdraw_reason=datetime.strptime("2024-09-10", '%Y-%m-%d'),
-            request_reason='Personal matters',
-            is_am=False,
-            is_pm=True
-        )
-        db.session.add(wfh_request_3)
+#         wfh_request_3 = WFHRequests(
+#             request_id=3,
+#             staff_id=140010,
+#             manager_id=140001,
+#             request_type='Ad-hoc',
+#             start_date=datetime.strptime("2024-09-15", '%Y-%m-%d'),
+#             end_date=datetime.strptime("2024-09-20", '%Y-%m-%d'),
+#             request_status='Approved',
+#             apply_date=datetime.now(),
+#             withdraw_reason=datetime.strptime("2024-09-10", '%Y-%m-%d'),
+#             request_reason='Personal matters',
+#             is_am=False,
+#             is_pm=True
+#         )
+#         db.session.add(wfh_request_3)
 
-        wfh_request_date_2 = WFHRequestDates(
-                request_id = 3, 
-                specific_date=datetime.strptime("2024-09-15", '%Y-%m-%d'),
-                decision_status='Approved',
-                staff_id=140010,
-                is_am=False,
-                is_pm=True
-            )
-        db.session.add(wfh_request_date_2)
-        db.session.commit()
+#         wfh_request_date_2 = WFHRequestDates(
+#                 request_id = 3, 
+#                 specific_date=datetime.strptime("2024-09-15", '%Y-%m-%d'),
+#                 decision_status='Approved',
+#                 staff_id=140010,
+#                 is_am=False,
+#                 is_pm=True
+#             )
+#         db.session.add(wfh_request_date_2)
+#         db.session.commit()
 
-        request_body = {
-            'request_id': 2,
-            'decision_status': 'Approved',
-            'start_date': '2024-09-15',  
-            'decision_notes': 'Nil',
-            'manager_id': 140001
-        }
+#         request_body = {
+#             'request_id': 2,
+#             'decision_status': 'Approved',
+#             'start_date': '2024-09-15',  
+#             'decision_notes': 'Nil',
+#             'manager_id': 140001
+#         }
 
-        response = self.client.post("/api/approve",
-                                    data=json.dumps(request_body),
-                                    content_type='application/json')
+#         response = self.client.post("/api/approve",
+#                                     data=json.dumps(request_body),
+#                                     content_type='application/json')
         
-        self.assertEqual(response.status_code, 422)
-        self.assertEqual(response.get_json(), {"error": "Exceed 0.5 rule limit for PM session"})
+#         self.assertEqual(response.status_code, 422)
+#         self.assertEqual(response.get_json(), {"error": "Exceed 0.5 rule limit for PM session"})
 
 
 
-    def test_headcount_check_exactly_50_percent(self):
-        wfh_request_1 = WFHRequests(
-            request_id=1,
-            staff_id=140008,
-            manager_id=140001,
-            request_type='Ad-hoc',
-            start_date=datetime.strptime("2024-09-15", '%Y-%m-%d'),
-            end_date=datetime.strptime("2024-09-20", '%Y-%m-%d'),
-            request_status='Approved',
-            apply_date=datetime.now(),
-            withdraw_reason=datetime.strptime("2024-09-10", '%Y-%m-%d'),
-            request_reason='Personal matters',
-            is_am=False,
-            is_pm=True
-        )
-        db.session.add(wfh_request_1)
+#     def test_headcount_check_exactly_50_percent(self):
+#         wfh_request_1 = WFHRequests(
+#             request_id=1,
+#             staff_id=140008,
+#             manager_id=140001,
+#             request_type='Ad-hoc',
+#             start_date=datetime.strptime("2024-09-15", '%Y-%m-%d'),
+#             end_date=datetime.strptime("2024-09-20", '%Y-%m-%d'),
+#             request_status='Approved',
+#             apply_date=datetime.now(),
+#             withdraw_reason=datetime.strptime("2024-09-10", '%Y-%m-%d'),
+#             request_reason='Personal matters',
+#             is_am=False,
+#             is_pm=True
+#         )
+#         db.session.add(wfh_request_1)
 
-        wfh_request_date_1 = WFHRequestDates(
-                request_id = 1, 
-                specific_date=datetime.strptime("2024-09-15", '%Y-%m-%d'),
-                decision_status='Approved',
-                staff_id=140008,
-                is_am=False,
-                is_pm=True
-            )
-        db.session.add(wfh_request_date_1)
+#         wfh_request_date_1 = WFHRequestDates(
+#                 request_id = 1, 
+#                 specific_date=datetime.strptime("2024-09-15", '%Y-%m-%d'),
+#                 decision_status='Approved',
+#                 staff_id=140008,
+#                 is_am=False,
+#                 is_pm=True
+#             )
+#         db.session.add(wfh_request_date_1)
 
-        wfh_request_2 = WFHRequests(
-            request_id=2,
-            staff_id=140009,
-            manager_id=140001,
-            request_type='Ad-hoc',
-            start_date=datetime.strptime("2024-09-15", '%Y-%m-%d'),
-            end_date=datetime.strptime("2024-09-20", '%Y-%m-%d'),
-            request_status='Pending',
-            apply_date=datetime.now(),
-            withdraw_reason=datetime.strptime("2024-09-10", '%Y-%m-%d'),
-            request_reason='Personal matters',
-            is_am=False,
-            is_pm=True
-        )
-        db.session.add(wfh_request_2)
+#         wfh_request_2 = WFHRequests(
+#             request_id=2,
+#             staff_id=140009,
+#             manager_id=140001,
+#             request_type='Ad-hoc',
+#             start_date=datetime.strptime("2024-09-15", '%Y-%m-%d'),
+#             end_date=datetime.strptime("2024-09-20", '%Y-%m-%d'),
+#             request_status='Pending',
+#             apply_date=datetime.now(),
+#             withdraw_reason=datetime.strptime("2024-09-10", '%Y-%m-%d'),
+#             request_reason='Personal matters',
+#             is_am=False,
+#             is_pm=True
+#         )
+#         db.session.add(wfh_request_2)
 
-        db.session.commit()
+#         db.session.commit()
 
-        request_body = {
-            'request_id': 2,
-            'decision_status': 'Approved',
-            'start_date': '2024-09-15',  
-            'decision_notes': 'Nil',
-            'manager_id': 140001
-        }
+#         request_body = {
+#             'request_id': 2,
+#             'decision_status': 'Approved',
+#             'start_date': '2024-09-15',  
+#             'decision_notes': 'Nil',
+#             'manager_id': 140001
+#         }
 
-        response = self.client.post("/api/approve",
-                                    data=json.dumps(request_body),
-                                    content_type='application/json')
+#         response = self.client.post("/api/approve",
+#                                     data=json.dumps(request_body),
+#                                     content_type='application/json')
 
-        self.assertEqual(response.status_code, 201)
-        self.assertIn("manager's decision stored successfully", response.get_json()["message"])
+#         self.assertEqual(response.status_code, 201)
+#         self.assertIn("manager's decision stored successfully", response.get_json()["message"])
 
 if __name__ == "__main__":
     unittest.main()

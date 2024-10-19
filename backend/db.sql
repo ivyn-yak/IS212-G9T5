@@ -1,52 +1,71 @@
+-- Drop existing types
 DROP TYPE IF EXISTS request_type CASCADE;
 DROP TYPE IF EXISTS request_status CASCADE;
 DROP TYPE IF EXISTS decision_status CASCADE;
 
+-- Drop existing tables
 DROP TABLE IF EXISTS work_from_home_request_dates CASCADE;
 DROP TABLE IF EXISTS work_from_home_requests CASCADE;
 DROP TABLE IF EXISTS requestdecisions CASCADE;
+DROP TABLE IF EXISTS WFHRequestLogs CASCADE;
+DROP TABLE IF EXISTS WithdrawDecisions CASCADE;
+DROP TABLE IF EXISTS RequestDecisions CASCADE;
+DROP TABLE IF EXISTS WFHRequests CASCADE;
 
-CREATE TYPE request_type AS ENUM ('Ad-hoc', 'Recurring');
+-- Create types
 CREATE TYPE request_status AS ENUM ('Pending', 'Approved', 'Rejected', 'Cancelled', 'Withdrawn', 'Pending_Withdraw');
 CREATE TYPE decision_status AS ENUM ('Approved', 'Rejected');
 
-CREATE TABLE work_from_home_requests (
-    request_id SERIAL PRIMARY KEY,
-    staff_id INTEGER NOT NULL,
-    manager_id INTEGER NOT NULL,
-    request_type request_type NOT NULL,  
-    start_date DATE NOT NULL,
-    end_date DATE NOT NULL,
-    recurrence_days VARCHAR(20),  
-    is_am BOOLEAN NOT NULL,  
-    is_pm BOOLEAN NOT NULL,  
-    request_status request_status NOT NULL,  
-    apply_date DATE NOT NULL,
-    withdraw_reason TEXT,
+-- WFHRequests Table
+CREATE TABLE WFHRequests (
+    request_id INT,
+    specific_date DATE,
+    staff_id INT,
+    Manager_id INT,
+    is_am BOOLEAN,
+    is_pm BOOLEAN,
+    request_status request_status,
+    apply_date DATE,
     request_reason TEXT,
-    FOREIGN KEY (staff_id) REFERENCES employee(staff_id),
-    FOREIGN KEY (manager_id) REFERENCES employee(staff_id)
+    PRIMARY KEY (request_id, specific_date),
+    FOREIGN KEY (staff_id) REFERENCES employee(staff_ID),
+    FOREIGN KEY (Manager_id) REFERENCES employee(staff_ID)
 );
 
-CREATE TABLE requestdecisions (
-    decision_id SERIAL PRIMARY KEY,
-    request_id INTEGER NOT NULL,
-    manager_id INTEGER NOT NULL,
-    decision_date DATE NOT NULL,
-    decision_status decision_status NOT NULL, 
+-- RequestDecisions Table
+CREATE TABLE RequestDecisions (
+    decision_id INT PRIMARY KEY,
+    request_id INT,
+    specific_date DATE,
+    manager_id INT,
+    decision_date DATE,
+    decision_status decision_status,
     decision_notes TEXT,
-    FOREIGN KEY (request_id) REFERENCES work_from_home_requests(request_id),
-    FOREIGN KEY (manager_id) REFERENCES employee(staff_id)
+    FOREIGN KEY (request_id, specific_date) REFERENCES WFHRequests(request_id, specific_date),
+    FOREIGN KEY (manager_id) REFERENCES employee(staff_ID)
 );
 
-CREATE TABLE work_from_home_request_dates (
-    date_id SERIAL PRIMARY KEY,
-    request_id INTEGER NOT NULL,
-    specific_date DATE NOT NULL,
-    staff_id INTEGER NOT NULL,
-    decision_status decision_status NOT NULL, 
-    is_am BOOLEAN NOT NULL,  
-    is_pm BOOLEAN NOT NULL,  
-    FOREIGN KEY (request_id) REFERENCES work_from_home_requests(request_id),
-    FOREIGN KEY (staff_id) REFERENCES employee(staff_id)
+-- WithdrawDecisions Table
+CREATE TABLE WithdrawDecisions (
+    withdraw_decision_id INT PRIMARY KEY,
+    request_id INT,
+    specific_date DATE,
+    manager_id INT,
+    decision_date DATE,
+    decision_status decision_status,
+    decision_notes TEXT,
+    FOREIGN KEY (request_id, specific_date) REFERENCES WFHRequests(request_id, specific_date),
+    FOREIGN KEY (manager_id) REFERENCES employee(staff_ID)
+);
+
+-- WFHRequestLogs Table
+CREATE TABLE WFHRequestLogs (
+    log_datetime TIMESTAMP,
+    request_id INT,
+    specific_date DATE,
+    request_status_log request_status,
+    apply_date_log DATE,
+    reason_log TEXT,
+    PRIMARY KEY (log_datetime, request_id, specific_date),
+    FOREIGN KEY (request_id, specific_date) REFERENCES WFHRequests(request_id, specific_date)
 );
