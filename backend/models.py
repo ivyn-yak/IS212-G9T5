@@ -137,7 +137,7 @@ class WFHRequestLogs(db.Model):
     )
 
     __table_args__ = (
-        PrimaryKeyConstraint('log_datetime', 'request_id'),
+        PrimaryKeyConstraint('log_datetime', 'request_id', 'specific_date'),
     )
 
     def json(self):
