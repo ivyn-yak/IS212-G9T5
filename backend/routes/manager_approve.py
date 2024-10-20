@@ -129,30 +129,30 @@ def manager_approve_recurring():
         is_pm = req["is_pm"]
 
 
-        if not recurrence_days:
-            return jsonify({"error": "Recurrence days not specified"}), 400
+        # if not recurrence_days:
+        #     return jsonify({"error": "Recurrence days not specified"}), 400
 
-        day_mapping = {
-            'monday': 0,
-            'tuesday': 1,
-            'wednesday': 2,
-            'thursday': 3,
-            'friday': 4,
-            'saturday': 5,
-            'sunday': 6
-        }
+        # day_mapping = {
+        #     'monday': 0,
+        #     'tuesday': 1,
+        #     'wednesday': 2,
+        #     'thursday': 3,
+        #     'friday': 4,
+        #     'saturday': 5,
+        #     'sunday': 6
+        # }
 
-        try:
-            recurrence_day_int = day_mapping[recurrence_days.strip().lower()] if recurrence_days.strip().lower() in day_mapping else int(recurrence_days)
-        except (ValueError, KeyError):
-            return jsonify({"error": "Invalid recurrence day format"}), 400
+        # try:
+        #     recurrence_day_int = day_mapping[recurrence_days.strip().lower()] if recurrence_days.strip().lower() in day_mapping else int(recurrence_days)
+        # except (ValueError, KeyError):
+        #     return jsonify({"error": "Invalid recurrence day format"}), 400
 
-        recurring_dates = []
-        current_date = start_date
-        while current_date <= end_date:
-            if current_date.weekday() == recurrence_day_int:
-                recurring_dates.append(current_date)
-            current_date += timedelta(days=1)
+        # recurring_dates = []
+        # current_date = start_date
+        # while current_date <= end_date:
+        #     if current_date.weekday() == recurrence_day_int:
+        #         recurring_dates.append(current_date)
+        #     current_date += timedelta(days=1)
 
         for current_date in recurring_dates:
             if is_am:
