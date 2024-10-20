@@ -117,16 +117,20 @@ def manager_approve_recurring():
     if not data:
         return jsonify({"error": "Invalid JSON or no data provided"}), 400
 
+    required_fields = ["request_id", "decision_status", "decision_notes", "manager_id"]
+    for field in required_fields:
+        if field not in data:
+            return jsonify({"error": f"Missing '{field}' in request"}), 400
+
     try:
         request_id = data["request_id"]
-        req = get_request(request_id)
+        req = get_request_by_id(request_id)
         if not req:
             return jsonify({"error": "Request not found"}), 404
 
+        ####### Start of headcount check #######
         staff_id = req["staff_id"]
         employee = Employee.query.filter_by(staff_id=staff_id).first()
-        # if not employee:
-        #     return jsonify({"error": f"Employee with staff_id {staff_id} not found"}), 404
 
         reporting_manager_id = employee.reporting_manager
         if not reporting_manager_id:
@@ -135,46 +139,21 @@ def manager_approve_recurring():
         employees_under_same_manager = Employee.query.filter_by(reporting_manager=reporting_manager_id).all()
         total_employees = len(employees_under_same_manager)
 
-        start_date = date.fromisoformat(req["start_date"])
-        end_date = date.fromisoformat(req["end_date"])
-        recurrence_days = req["recurrence_days"]
-        is_am = req["is_am"]
-        is_pm = req["is_pm"]
+        same_request = WFHRequests.query.filter_by(request_id=request_id).all()
+        if not same_request:
+            return jsonify({"error": "No existing requests found for the given request_id"}), 416
 
-
-        # if not recurrence_days:
-        #     return jsonify({"error": "Recurrence days not specified"}), 400
-
-        # day_mapping = {
-        #     'monday': 0,
-        #     'tuesday': 1,
-        #     'wednesday': 2,
-        #     'thursday': 3,
-        #     'friday': 4,
-        #     'saturday': 5,
-        #     'sunday': 6
-        # }
-
-        # try:
-        #     recurrence_day_int = day_mapping[recurrence_days.strip().lower()] if recurrence_days.strip().lower() in day_mapping else int(recurrence_days)
-        # except (ValueError, KeyError):
-        #     return jsonify({"error": "Invalid recurrence day format"}), 400
-
-        # recurring_dates = []
-        # current_date = start_date
-        # while current_date <= end_date:
-        #     if current_date.weekday() == recurrence_day_int:
-        #         recurring_dates.append(current_date)
-        #     current_date += timedelta(days=1)
-
-        for current_date in recurring_dates:
-            if is_am:
-                approved_am_requests = WFHRequestDates.query.filter(
+        for arrangement in same_request:
+            arrangement_date = arrangement.specific_date
+            arrangement_is_am = arrangement.is_am
+            arrangement_is_pm = arrangement.is_pm
+            if arrangement_is_am:
+                approved_am_requests = WFHRequests.query.filter(
                     and_(
-                        WFHRequestDates.staff_id.in_([emp.staff_id for emp in employees_under_same_manager]),
-                        WFHRequestDates.specific_date == start_date,
-                        WFHRequestDates.decision_status.in_(['Approved', 'Pending Withdraw']),
-                        WFHRequestDates.is_am == True  # Check for AM session
+                        WFHRequests.staff_id.in_([emp.staff_id for emp in employees_under_same_manager]),
+                        WFHRequests.specific_date == arrangement_date,
+                        WFHRequests.request_status.in_(['Approved', 'Pending Withdraw']),
+                        WFHRequests.is_am == True  # Check for AM session
                     )
                 ).count()
 
@@ -186,13 +165,13 @@ def manager_approve_recurring():
                 if ratio_am > 0.5:
                     return jsonify({"error": "Exceed 0.5 rule limit for AM session"}), 422
 
-            if is_pm:
-                approved_pm_requests = WFHRequestDates.query.filter(
+            if arrangement_is_pm:
+                approved_pm_requests = WFHRequests.query.filter(
                     and_(
-                        WFHRequestDates.staff_id.in_([emp.staff_id for emp in employees_under_same_manager]),
-                        WFHRequestDates.specific_date == start_date,
-                        WFHRequestDates.decision_status.in_(['Approved', 'Pending Withdraw']),
-                        WFHRequestDates.is_pm == True  # Check for PM session
+                        WFHRequests.staff_id.in_([emp.staff_id for emp in employees_under_same_manager]),
+                        WFHRequests.specific_date == arrangement_date,
+                        WFHRequests.request_status.in_(['Approved', 'Pending Withdraw']),
+                        WFHRequests.is_pm == True  # Check for PM session
                     )
                 ).count()
 
@@ -204,18 +183,17 @@ def manager_approve_recurring():
                 if ratio_pm > 0.5:
                     return jsonify({"error": "Exceed 0.5 rule limit for PM session"}), 422
             
-        for current_date in recurring_dates:
+        for arrangement in same_request:
+            arrangement_date = arrangement.specific_date
             decision = create_request_decision(data)
             if "error" in decision:
-                return jsonify({"error": f"Error creating decision for date {current_date}: {decision['error']}"}), 500
-
-        # Update the original request status
-        update_request(request_id, {"request_status": data.get("decision_status")})
+                return jsonify({"error": f"Error creating decision for arrangement {arrangement}: {decision['error']}"}), 500
+            updated_request = update_request(request_id, arrangement_date, {"request_status": data.get("decision_status")})
+            log_wfh_request(updated_request["new_request"]) # add to wfhrequestlogs
 
         return jsonify({
             "message": "Recurring WFH requests processed successfully",
             "request": req,
-            "recurring_dates": [date.isoformat() for date in recurring_dates],
         }), 201
 
     except Exception as e:
