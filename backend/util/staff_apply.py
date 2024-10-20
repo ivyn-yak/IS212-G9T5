@@ -85,21 +85,6 @@ def handle_recurring_request(data):
             if current_date.weekday() == recurrence_day_int:
                 recurring_dates.append(current_date)
             current_date += timedelta(days=1)
-
-        # new_request = WFHRequests(
-        #     staff_id=staff_id,
-        #     manager_id=rm_id,
-        #     request_type=data['request_type'],  
-        #     start_date=date.fromisoformat(data['start_date']),  
-        #     end_date=date.fromisoformat(data['end_date']),
-        #     recurrence_days=data.get('recurrence_days', None),
-        #     is_am=data['is_am'],
-        #     is_pm=data['is_pm'], 
-        #     request_status= "Pending",  
-        #     apply_date=date.fromisoformat(data['apply_date']),
-        #     withdraw_reason=None,
-        #     request_reason=data.get('request_reason')
-        # )
             
         request_list = []
         for recurring_date in recurring_dates:
@@ -117,7 +102,6 @@ def handle_recurring_request(data):
             db.session.add(new_request)
             request_list.append(new_request.json())
         
-        # db.session.add(new_request)
         db.session.commit()
 
         return jsonify({
