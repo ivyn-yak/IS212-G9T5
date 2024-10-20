@@ -40,21 +40,8 @@ class TestApp(flask_testing.TestCase):
             role=1
         )
 
-        wfh_request = WFHRequests(
-            request_id = "1",
-            staff_id=140008,
-            manager_id=140001,
-            specific_date=datetime.date(2024, 9, 20),
-            is_am=True,
-            is_pm=True,
-            request_status='Pending',
-            apply_date=datetime.date(2024, 9, 30),
-            request_reason="Sick"
-        )
-
         db.session.add(employee)
         db.session.add(manager)
-        db.session.add(wfh_request)
         db.session.commit()
 
     def tearDown(self):
@@ -68,6 +55,9 @@ class TestStaffApply(TestApp):
         response = self.client.post("/api/apply",
                                     data=json.dumps(request_body),
                                     content_type='application/json')
+        response = self.client.post("/api/apply",
+                                    data=json.dumps(request_body),
+                                    content_type='application/json')
         
         self.assertEqual(response.get_json(), {"error": "Invalid JSON or no data provided"})
 
@@ -78,7 +68,9 @@ class TestStaffApply(TestApp):
         request_body = {
             'staff_id': 140008,
             'request_type': 'Ad-hoc',
-            'specific_date': "2024-09-15",
+            'start_date': "2024-09-15",
+            'end_date': "2024-09-15",
+            'recurrence_days': None,
             'is_am': True,
             'is_pm': True,
             'apply_date': "2024-09-30",
@@ -109,7 +101,9 @@ class TestStaffApply(TestApp):
         request_body = {
             'staff_id': 0,
             'request_type': 'Ad-hoc',
-            'specific_date': "2024-09-15",
+            'start_date': "2024-09-15",
+            'end_date': "2024-09-15",
+            'recurrence_days': None,
             'is_am': True,
             'is_pm': True,
             'apply_date': "2024-09-30",
@@ -127,7 +121,9 @@ class TestStaffApply(TestApp):
         request_body = {
             'staff_id': 140008,
             'request_type': 'Wrong Type',
-            'specific_date': "2024-09-15",
+            'start_date': "2024-09-15",
+            'end_date': "2024-09-15",
+            'recurrence_days': None,
             'is_am': True,
             'is_pm': True,
             'apply_date': "2024-09-30",
@@ -142,10 +138,27 @@ class TestStaffApply(TestApp):
         self.assertEqual(response.get_json(), {"error": "Invalid request type"})
 
     def test_staff_apply_existing_request(self):
+        wfh_request = WFHRequests(
+            request_id = "1",
+            staff_id=140008,
+            manager_id=140001,
+            specific_date=datetime.date(2024, 9, 20),
+            is_am=True,
+            is_pm=True,
+            request_status='Pending',
+            apply_date=datetime.date(2024, 9, 30),
+            request_reason="Sick"
+        )
+
+        db.session.add(wfh_request)
+        db.session.commit()
+
         request_body = {
             'staff_id': 140008,
             'request_type': 'Ad-hoc',
-            'specific_date': "2024-09-20",
+            'start_date': "2024-09-20",
+            'end_date': "2024-09-20",
+            'recurrence_days': None,
             'is_am': True,
             'is_pm': True,
             'apply_date': "2024-09-30",
@@ -159,99 +172,99 @@ class TestStaffApply(TestApp):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.get_json(), {"error": f"Staff has an existing request for 2024-09-20"})
 
-#     def test_staff_apply_recurring_invalid_json(self):
-#             request_body = {}
+    @patch('util.staff_apply.uuid.uuid4')
+    def test_staff_apply_recurring(self, mock_uuid):
+        mock_uuid.return_value = uuid.UUID('12345678-1234-5678-1234-567812345678')
+        # Valid recurring request
+        request_body = {
+            'staff_id': 140008,
+            'request_type': 'Recurring',
+            'start_date': "2024-09-15",
+            'end_date': "2024-09-29",
+            'recurrence_days': 'Monday',  # Recurring on Mondays and Wednesdays
+            'is_am': True,
+            'is_pm': False,
+            'apply_date': "2024-09-01",
+            'request_reason': "Regular remote work"
+        }
 
-#             response = self.client.post("/api/apply",
-#                                         data=json.dumps(request_body),
-#                                         content_type='application/json')
+        response = self.client.post("/api/apply",
+                                    data=json.dumps(request_body),
+                                    content_type='application/json')
 
-#             self.assertEqual(response.status_code, 400)
-#             self.assertEqual(response.get_json(), {"error": "Invalid JSON or no data provided"})
+        self.assertEqual(response.status_code, 201)
+        response_json = response.get_json()
+        self.assertEqual(response.get_json()["message"], "Recurring requests successfully created.")
+        self.assertEqual(len(response_json["requests"]), 2)
+        for req in response_json["requests"]:
+            self.assertEqual(req["request_id"], '12345678-1234-5678-1234-567812345678')
+            self.assertEqual(req["staff_id"], 140008)
+            self.assertEqual(req["is_am"], True)
+            self.assertEqual(req["is_pm"], False)
+            self.assertEqual(req["request_status"], "Pending")
 
-#     def test_staff_apply_recurring(self):
-#             # Valid recurring request
-#             request_body = {
-#                 'staff_id': 140008,
-#                 'request_type': 'Recurring',
-#                 'start_date': "2024-09-15",
-#                 'end_date': "2024-09-29",
-#                 'recurrence_days': 'Monday',  # Recurring on Mondays and Wednesdays
-#                 'is_am': True,
-#                 'is_pm': False,
-#                 'apply_date': "2024-09-01",
-#                 'request_reason': "Regular remote work"
-#             }
 
-#             response = self.client.post("/api/apply",
-#                                         data=json.dumps(request_body),
-#                                         content_type='application/json')
+    def test_staff_apply_recurring_invalid_staff(self):
+        # Invalid staff ID
+        request_body = {
+            'staff_id': 9999,  # Non-existent staff
+            'request_type': 'Recurring',
+            'start_date': "2024-09-15",
+            'end_date': "2024-09-29",
+            'recurrence_days': "Wednesday",  
+            'is_am': True,
+            'is_pm': False,
+            'apply_date': "2024-09-01",
+            'request_reason': "Regular remote work"
+        }
 
-#             self.assertEqual(response.status_code, 201)
-#             self.assertEqual(response.get_json()["message"], "Recurring request successfully created.")
+        response = self.client.post("/api/apply",
+                                    data=json.dumps(request_body),
+                                    content_type='application/json')
 
-#     def test_staff_apply_recurring_invalid_staff(self):
-#         # Invalid staff ID
-#         request_body = {
-#             'staff_id': 9999,  # Non-existent staff
-#             'request_type': 'Recurring',
-#             'start_date': "2024-09-15",
-#             'end_date': "2024-09-29",
-#             'recurrence_days': "Wednesday",  
-#             'is_am': True,
-#             'is_pm': False,
-#             'apply_date': "2024-09-01",
-#             'request_reason': "Regular remote work"
-#         }
-
-#         response = self.client.post("/api/apply",
-#                                     data=json.dumps(request_body),
-#                                     content_type='application/json')
-
-#         self.assertEqual(response.status_code, 404)
-#         self.assertEqual(response.get_json(), {"error": "Staff not found"})
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.get_json(), {"error": "Staff not found"})
     
-#     def test_staff_apply_recurring_no_recurrence_days(self):
-#         # Missing recurrence days
-#         request_body = {
-#             'staff_id': 140008,
-#             'request_type': 'Recurring',
-#             'start_date': "2024-09-15",
-#             'end_date': "2024-09-29",
-#             'recurrence_days': None,  # Missing recurrence days
-#             'is_am': True,
-#             'is_pm': False,
-#             'apply_date': "2024-09-01",
-#             'request_reason': "Regular remote work"
-#         }
+    def test_staff_apply_recurring_no_recurrence_days(self):
+        # Missing recurrence days
+        request_body = {
+            'staff_id': 140008,
+            'request_type': 'Recurring',
+            'start_date': "2024-09-15",
+            'end_date': "2024-09-29",
+            'recurrence_days': None,  # Missing recurrence days
+            'is_am': True,
+            'is_pm': False,
+            'apply_date': "2024-09-01",
+            'request_reason': "Regular remote work"
+        }
 
-#         response = self.client.post("/api/apply",
-#                                     data=json.dumps(request_body),
-#                                     content_type='application/json')
+        response = self.client.post("/api/apply",
+                                    data=json.dumps(request_body),
+                                    content_type='application/json')
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_json(), {"error": "Recurrence days not provided"})
 
-#         self.assertEqual(response.status_code, 400)
-#         self.assertEqual(response.get_json(), {"error": "Recurrence days not provided"})
+    def test_staff_apply_recurring_invalid_request_type(self):
+        # Invalid request type
+        request_body = {
+            'staff_id': 140008,
+            'request_type': 'Wrong Type',
+            'start_date': "2024-09-15",
+            'end_date': "2024-09-29",
+            'recurrence_days': [0, 2],  
+            'is_am': True,
+            'is_pm': False,
+            'apply_date': "2024-09-01",
+            'request_reason': "Regular remote work"
+        }
 
-#     def test_staff_apply_recurring_invalid_request_type(self):
-#         # Invalid request type
-#         request_body = {
-#             'staff_id': 140008,
-#             'request_type': 'Wrong Type',
-#             'start_date': "2024-09-15",
-#             'end_date': "2024-09-29",
-#             'recurrence_days': [0, 2],  
-#             'is_am': True,
-#             'is_pm': False,
-#             'apply_date': "2024-09-01",
-#             'request_reason': "Regular remote work"
-#         }
+        response = self.client.post("/api/apply",
+                                    data=json.dumps(request_body),
+                                    content_type='application/json')
 
-#         response = self.client.post("/api/apply",
-#                                     data=json.dumps(request_body),
-#                                     content_type='application/json')
-
-#         self.assertEqual(response.status_code, 400)
-#         self.assertEqual(response.get_json(), {"error": "Invalid request type"})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_json(), {"error": "Invalid request type"})
 
 if __name__ == '__main__':
     unittest.main()
