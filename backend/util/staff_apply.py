@@ -17,17 +17,14 @@ def handle_adhoc_request(data):
             return jsonify({"error": "Manager not found"}), 404
 
         new_request = WFHRequests(
+            request_id = data.get('request_id'), # need to check how to get the request id
             staff_id=staff_id,
             manager_id=rm_id,
-            request_type=data['request_type'],  
-            start_date=date.fromisoformat(data['start_date']),  
-            end_date=date.fromisoformat(data['end_date']),
-            recurrence_days=data.get('recurrence_days', None),
+            specific_date = date.fromisoformat(data['start_date']),
             is_am=data['is_am'],
             is_pm=data['is_pm'], 
             request_status= "Pending",  
             apply_date=date.fromisoformat(data['apply_date']),
-            withdraw_reason=None,
             request_reason=data.get('request_reason')
         )
         
