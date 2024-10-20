@@ -78,8 +78,8 @@ def handle_recurring_request(data):
             return jsonify({"error": "Invalid recurrence day format"}), 400
 
         recurring_dates = []
-        start_date = data.get('start_date')
-        end_date = data.get('end_date')
+        start_date = date.fromisoformat(data.get('start_date'))
+        end_date = date.fromisoformat(data.get('end_date'))
         current_date = start_date
         while current_date <= end_date:
             if current_date.weekday() == recurrence_day_int:
@@ -101,11 +101,13 @@ def handle_recurring_request(data):
         #     request_reason=data.get('request_reason')
         # )
             
-        for date in recurring_dates:
+        request_list = []
+        for recurring_date in recurring_dates:
             new_request = WFHRequests(
+                request_id = data.get('request_id'), # need to check how to get the request id
                 staff_id=staff_id,
                 manager_id=rm_id,
-                specific_date = date, 
+                specific_date = recurring_date, 
                 is_am = data.get('is_am'), 
                 is_pm = data.get('is_pm'),
                 request_status= "Pending",
@@ -113,13 +115,14 @@ def handle_recurring_request(data):
                 request_reason = data.get('request_reason')
             )
             db.session.add(new_request)
+            request_list.append(new_request.json())
         
         # db.session.add(new_request)
         db.session.commit()
 
         return jsonify({
             "message": "Recurring requests successfully created.",
-            "request": new_request.json()
+            "requests": request_list
         }), 201
         
     except Exception as e:
