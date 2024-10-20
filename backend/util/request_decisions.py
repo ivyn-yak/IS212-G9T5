@@ -1,13 +1,13 @@
-import datetime
+from datetime import date
 from models import *
 
 def create_request_decision(data):
     try: 
         decision = RequestDecisions(
                 request_id=data["request_id"],
-                manager_id=data.get("manager_id"),
+                manager_id=data["manager_id"],
                 decision_status=data["decision_status"],
-                decision_date = datetime.datetime.today().date(),
+                decision_date = date.today(),
                 decision_notes=data["decision_notes"]
             )
 

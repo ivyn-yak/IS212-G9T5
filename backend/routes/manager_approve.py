@@ -3,6 +3,7 @@ from models import *
 from util.wfh_requests import *
 from util.request_decisions import *
 from util.wfh_dates import *
+from util.wfh_request_logs import *
 from datetime import timedelta
 from datetime import date
 from sqlalchemy import and_
@@ -14,36 +15,50 @@ def manager_approve_adhoc():
     data = request.get_json()
     if not data:
         return jsonify({"error": "Invalid JSON or no data provided"}), 400
+    
+    required_fields = ["request_id", "decision_status", "decision_notes", "manager_id"]
+    for field in required_fields:
+        if field not in data:
+            return jsonify({"error": f"Missing '{field}' in request"}), 400
 
     try:
         request_id = data["request_id"]
-        req = get_request(request_id)
+        req = get_request_by_id(request_id)
         if not req:
             return jsonify({"error": "Request not found"}), 404
         
         staff_id = req["staff_id"]
         employee = Employee.query.filter_by(staff_id=staff_id).first()
-        # if not employee: 
-        #     return jsonify({"error": f"Employee with staff_id {staff_id} not found"}), 404
+        if not employee: 
+            return jsonify({"error": f"Employee with staff_id {staff_id} not found"}), 404
         
-        reporting_manager_id = employee.reporting_manager
-        if not reporting_manager_id:
+        reporting_manager_id = data["manager_id"] #checks if managerid from payload is a valid employee
+        manager = Employee.query.filter_by(staff_id=reporting_manager_id).first()
+        if not manager:
             return jsonify({"error": f"Reporting manager for employee {staff_id} not found"}), 404
         
+        if employee.reporting_manager != data["manager_id"]: #checks if managerid from payload is the manager of employee
+            return jsonify({"error": f"Employee {staff_id} reports under {employee.reporting_manager} instead of {data['manager_id']}"}), 400
+        
+        request_status = req["request_status"]
+        if request_status != "Pending":
+            return jsonify({"error": f"Manager cannot approve or reject request with {request_status} status"}), 400
+
+        ###### head count check ######
         employees_under_same_manager = Employee.query.filter_by(reporting_manager=reporting_manager_id).all()
         total_employees = len(employees_under_same_manager)
         
-        start_date = req["start_date"]
+        start_date = req["specific_date"]
         is_am = req["is_am"]
         is_pm = req["is_pm"]
 
         if is_am:
-            approved_am_requests = WFHRequestDates.query.filter(
+            approved_am_requests = WFHRequests.query.filter(
                 and_(
-                    WFHRequestDates.staff_id.in_([emp.staff_id for emp in employees_under_same_manager]),
-                    WFHRequestDates.specific_date == start_date,
-                    WFHRequestDates.decision_status.in_(['Approved', 'Pending Withdraw']),
-                    WFHRequestDates.is_am == True  # Check for AM session
+                    WFHRequests.staff_id.in_([emp.staff_id for emp in employees_under_same_manager]),
+                    WFHRequests.specific_date == start_date,
+                    WFHRequests.request_status.in_(['Approved', 'Pending_Withdraw']),
+                    WFHRequests.is_am == True  # Check for AM session
                 )
             ).count()
 
@@ -56,12 +71,12 @@ def manager_approve_adhoc():
                 return jsonify({"error": "Exceed 0.5 rule limit for AM session"}), 422
 
         if is_pm:
-            approved_pm_requests = WFHRequestDates.query.filter(
+            approved_pm_requests = WFHRequests.query.filter(
                 and_(
-                    WFHRequestDates.staff_id.in_([emp.staff_id for emp in employees_under_same_manager]),
-                    WFHRequestDates.specific_date == start_date,
-                    WFHRequestDates.decision_status.in_(['Approved', 'Pending Withdraw']),
-                    WFHRequestDates.is_pm == True  # Check for PM session
+                    WFHRequests.staff_id.in_([emp.staff_id for emp in employees_under_same_manager]),
+                    WFHRequests.specific_date == start_date,
+                    WFHRequests.request_status.in_(['Approved', 'Pending_Withdraw']),
+                    WFHRequests.is_pm == True  # Check for PM session
                 )
             ).count()
 
@@ -73,28 +88,26 @@ def manager_approve_adhoc():
             if ratio_pm > 0.5:
                 return jsonify({"error": "Exceed 0.5 rule limit for PM session"}), 422
 
-        new_req = update_request(request_id, {"request_status": data.get("decision_status")})
+         ###### end of head count check ######
+
+        new_req = update_request(request_id, start_date, {"request_status": data.get("decision_status")})
         if new_req is None:
             return jsonify({"error": "Request not found"}), 404
+        
+        log_wfh_request(new_req["new_request"]) # add to wfhrequestlogs
 
         decision = create_request_decision(data)
         if "error" in decision:
-            return jsonify(decision), 500
-        
-        wfh_date = add_approved_date(new_req['new_request'], decision["decision"]["decision_status"])
-        if "error" in wfh_date:
-            return jsonify(wfh_date), 500 
+            return jsonify(decision), 500 
         
         return jsonify({
             "message": "Request updated and manager's decision stored successfully",
             "request": new_req["new_request"],
-            "decision": decision["decision"],
-            "wfh_date": wfh_date["wfh_date"]
+            "decision": decision["decision"]
         }), 201
 
     except Exception as e:
         db.session.rollback() 
-        print(f"Error: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 @approve.route("/api/approve_recurring", methods=['POST'])
