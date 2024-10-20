@@ -18,7 +18,7 @@ CREATE TYPE decision_status AS ENUM ('Approved', 'Rejected');
 
 -- WFHRequests Table
 CREATE TABLE WFHRequests (
-    request_id INT,
+    request_id VARCHAR(36),
     specific_date DATE,
     staff_id INT,
     Manager_id INT,
@@ -35,7 +35,7 @@ CREATE TABLE WFHRequests (
 -- RequestDecisions Table
 CREATE TABLE RequestDecisions (
     decision_id INT PRIMARY KEY,
-    request_id INT,
+    request_id VARCHAR(36),
     specific_date DATE,
     manager_id INT,
     decision_date DATE,
@@ -48,7 +48,7 @@ CREATE TABLE RequestDecisions (
 -- WithdrawDecisions Table
 CREATE TABLE WithdrawDecisions (
     withdraw_decision_id INT PRIMARY KEY,
-    request_id INT,
+    request_id VARCHAR(36),
     specific_date DATE,
     manager_id INT,
     decision_date DATE,
@@ -61,7 +61,7 @@ CREATE TABLE WithdrawDecisions (
 -- WFHRequestLogs Table
 CREATE TABLE WFHRequestLogs (
     log_datetime TIMESTAMP,
-    request_id INT,
+    request_id VARCHAR(36),
     specific_date DATE,
     request_status_log request_status,
     apply_date_log DATE,
