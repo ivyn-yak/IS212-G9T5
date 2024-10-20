@@ -123,6 +123,18 @@ def handle_recurring_request(data):
             db.session.add(new_request)
             request_list.append(new_request.json())
         
+            new_request_log = WFHRequestLogs(
+                log_datetime=datetime.now(),  
+                request_id=new_request.request_id,
+                specific_date=new_request.specific_date,
+                request_status=new_request.request_status,  
+                apply_log_date=new_request.apply_date,
+                reason_log=new_request.request_reason
+            )
+
+        db.session.add(new_request_log)
+
+        
         db.session.commit()
 
         return jsonify({
