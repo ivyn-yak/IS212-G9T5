@@ -55,9 +55,6 @@ class TestStaffApply(TestApp):
         response = self.client.post("/api/apply",
                                     data=json.dumps(request_body),
                                     content_type='application/json')
-        response = self.client.post("/api/apply",
-                                    data=json.dumps(request_body),
-                                    content_type='application/json')
         
         self.assertEqual(response.get_json(), {"error": "Invalid JSON or no data provided"})
 
