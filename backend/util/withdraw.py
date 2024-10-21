@@ -1,10 +1,11 @@
 from datetime import date
 from models import *
 
-def create_request_decision(data):
+def create_withdraw_decision(data):
     try: 
-        decision = RequestDecisions(
+        decision = WithdrawDecisions(
                 request_id=data["request_id"],
+                specific_date = date.isoformat(data["specific_date"]),
                 manager_id=data["manager_id"],
                 decision_status=data["decision_status"],
                 decision_date = date.today(),
