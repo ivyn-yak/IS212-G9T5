@@ -40,7 +40,7 @@ class TestApp(flask_testing.TestCase):
         )
 
         wfh_request1 = WFHRequests(
-                request_id=1,
+                request_id='1',
                 staff_id=140008,
                 manager_id=140001,
                 specific_date=datetime.date(2024, 9, 15),
@@ -52,7 +52,7 @@ class TestApp(flask_testing.TestCase):
             )
         
         wfh_request2 = WFHRequests(
-                request_id=2,
+                request_id='2',
                 staff_id=140008,
                 manager_id=140001,
                 specific_date=datetime.date(2024, 10, 1),
@@ -81,7 +81,7 @@ class TestWFHRequests(TestApp):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get_json(), [
             {
-                'request_id': 1,
+                'request_id': '1',
                 'staff_id': 140008,
                 'manager_id': 140001,
                 'specific_date': '2024-09-15',
@@ -92,7 +92,7 @@ class TestWFHRequests(TestApp):
                 'request_reason': 'Sick'
             },
             {
-                'request_id': 2,
+                'request_id': '2',
                 'staff_id': 140008,
                 'manager_id': 140001,
                 'specific_date': '2024-10-01',
@@ -110,7 +110,7 @@ class TestWFHRequests(TestApp):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get_json(), [
             {
-                'request_id': 1,
+                'request_id': '1',
                 'staff_id': 140008,
                 'manager_id': 140001,
                 'specific_date': '2024-09-15',
@@ -146,7 +146,7 @@ class TestWFHRequests(TestApp):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get_json(), [
             {
-                'request_id': 1,
+                'request_id': '1',
                 'staff_id': 140008,
                 'manager_id': 140001,
                 'specific_date': '2024-09-15',
