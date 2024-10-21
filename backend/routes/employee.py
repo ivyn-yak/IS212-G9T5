@@ -10,22 +10,30 @@ def get_org_data():
     data = Employee.query.all()
     return jsonify([employee.json() for employee in data])
 
-@employee.route("/api/staff/<int:staff_id>")
+@employee.route("/api/<int:staff_id>")
 def get_staff_data(staff_id):
     employee = get_employee_by_id(staff_id)
-    if "error" in employee:
-        return jsonify({"staff_id": staff_id}), 404
+    if not employee:
+        return jsonify({"error": f"Staff {staff_id} not found"}), 404
     return jsonify(employee)
+
+@employee.route("/api/role/<int:staff_id>")
+def get_staff_role(staff_id):
+    employee = get_employee_by_id(staff_id)
+    if not employee:
+        return jsonify({"error": f"Staff {staff_id} not found"}), 404
+    
+    role = employee["role"]
+    return jsonify({"staff_id": staff_id, "role": role })
 
 @employee.route("/api/team/<int:staff_id>")
 def get_team_data(staff_id):
-    employee, error_response, error_code = get_employee_by_id(staff_id)
-    
-    if error_response:
-        return error_response, error_code
+    employee= get_employee_by_id(staff_id)
+    if not employee:
+        return jsonify({"error": f"Staff {staff_id} not found"}), 404
 
-    if employee.role == 2:  # If the employee is a role 2 (non-manager), get their manager's team
-        rm_id = employee.reporting_manager    
+    if employee["role"] == 2:  # If the employee is a role 2 (non-manager), get their manager's team
+        rm_id = employee["reporting_manager"]    
     else:
         rm_id = staff_id
     
