@@ -62,8 +62,8 @@ class TestWFHRequestLogs(unittest.TestCase):
             log_datetime=datetime.datetime(2024, 12, 12, 0, 30, 0),
             request_id="1", 
             specific_date=datetime.date(2024, 9, 15),
-            request_status="Approved",
-            apply_log_date=datetime.date(2024, 9, 18),
+            request_status_log="Approved",
+            apply_date_log=datetime.date(2024, 9, 18),
             reason_log="Tired"
             )
         
@@ -71,8 +71,8 @@ class TestWFHRequestLogs(unittest.TestCase):
             "log_datetime": "2024-12-12 00:30:00",
             "request_id": "1",
             "specific_date": "2024-09-15",
-            "request_status": "Approved",
-            "apply_log_date": "2024-09-18",
+            "request_status_log": "Approved",
+            "apply_date_log": "2024-09-18",
             "reason_log": "Tired"
         })
 
