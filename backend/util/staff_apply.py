@@ -127,8 +127,8 @@ def handle_recurring_request(data):
                 log_datetime=datetime.now(),  
                 request_id=new_request.request_id,
                 specific_date=new_request.specific_date,
-                request_status=new_request.request_status,  
-                apply_log_date=new_request.apply_date,
+                request_status_log=new_request.request_status,  
+                apply_date_log=new_request.apply_date,
                 reason_log=new_request.request_reason
             )
 
