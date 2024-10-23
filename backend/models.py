@@ -126,8 +126,8 @@ class WFHRequestLogs(db.Model):
     log_datetime = Column(DateTime, nullable=False)
     request_id = Column(String, ForeignKey('wfhrequests.request_id'), nullable=False)
     specific_date = Column(Date, ForeignKey('wfhrequests.specific_date'), nullable=False)  # The specific work-from-home date
-    request_status = Column(Enum('Pending', 'Approved', 'Rejected', 'Cancelled', 'Withdrawn', 'Pending_Withdraw', name='request_status'), nullable=False)
-    apply_log_date = Column(Date, nullable=False) # Updates when is Pending or Pending_Withdraw
+    request_status_log = Column(Enum('Pending', 'Approved', 'Rejected', 'Cancelled', 'Withdrawn', 'Pending_Withdraw', name='request_status'), nullable=False)
+    apply_date_log = Column(Date, nullable=False) # Updates when is Pending or Pending_Withdraw
     reason_log = Column(Text, nullable=True)
 
     work_from_home_request = db.relationship(
@@ -145,8 +145,8 @@ class WFHRequestLogs(db.Model):
             "log_datetime": str(self.log_datetime),
             "request_id": str(self.request_id),
             "specific_date": str(self.specific_date),
-            "request_status": self.request_status,
-            "apply_log_date": str(self.apply_log_date),
+            "request_status_log": self.request_status_log,
+            "apply_date_log": str(self.apply_date_log),
             "reason_log": self.reason_log
         }
     
