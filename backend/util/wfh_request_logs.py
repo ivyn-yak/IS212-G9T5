@@ -7,8 +7,8 @@ def log_wfh_request(new_request):
             log_datetime=datetime.now(),
             request_id=new_request["request_id"],
             specific_date=date.fromisoformat(new_request["specific_date"]),
-            request_status=new_request["request_status"],
-            apply_log_date=date.fromisoformat(new_request["apply_date"]),
+            request_status_log=new_request["request_status"],
+            apply_date_log=date.fromisoformat(new_request["apply_date"]),
             reason_log=new_request["request_reason"]
         )
 

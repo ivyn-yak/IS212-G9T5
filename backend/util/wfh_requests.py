@@ -43,18 +43,6 @@ def update_request(request_id, specific_date, data):
 
         return {"message": "Request updated", "new_request": wfh_request.json()}
 
-    # new_request_log = WFHRequestLogs(
-    #     log_datetime=datetime.now(),  
-    #     request_id=wfh_request.request_id,
-    #     specific_date=wfh_request.specific_date,
-    #     request_status=wfh_request.request_status,  
-    #     apply_log_date=wfh_request.apply_date,
-    #     reason_log=wfh_request.request_reason
-    # )
-
-    # db.session.add(new_request_log)
-    # db.session.commit()
-
     except Exception as e:
         db.session.rollback()
         return {"error": f"An error occurred: {str(e)}"}, 500
