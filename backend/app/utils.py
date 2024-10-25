@@ -1,5 +1,6 @@
 from celery import Celery, Task
 from flask import Flask
+from celery.beat import Scheduler
 
 def celery_init_app(app: Flask) -> Celery:
     class FlaskTask(Task):
