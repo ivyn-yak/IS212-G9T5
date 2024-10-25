@@ -1,5 +1,5 @@
 from models import *
-from datetime import date, datetime
+from datetime import date
 
 def get_request(request_id, specific_date):
     wfh_request = WFHRequests.query.filter_by(request_id=request_id, specific_date=specific_date).first()
@@ -46,5 +46,4 @@ def update_request(request_id, specific_date, data):
     except Exception as e:
         db.session.rollback()
         return {"error": f"An error occurred: {str(e)}"}, 500
-
 
