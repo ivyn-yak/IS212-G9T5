@@ -21,9 +21,13 @@ load_dotenv()
 def create_app():
     app = Flask(__name__)
 
-    DATABASE_URL = os.getenv("DATABASE_URL")
-    app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    if __name__ == '__main__':
+        DATABASE_URL = os.getenv("DATABASE_URL")
+        app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
+        app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    else:
+        app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite://"
+
     app.config.from_mapping(
         CELERY=dict(
             broker_url="redis://localhost:6379",
