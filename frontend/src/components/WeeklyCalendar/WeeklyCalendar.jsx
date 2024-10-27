@@ -44,7 +44,7 @@ const WeeklyCalendar = ({
       setHighlightedStaffId(null);
     } else if (scheduleData?.team) {
       const foundStaff = scheduleData.team.find(staff => 
-        staff.name?.toLowerCase().includes(newSearchTerm.toLowerCase()) ||
+        staff.fullName.toLowerCase().includes(newSearchTerm.toLowerCase()) ||
         staff.staffID.toString().includes(newSearchTerm)
       );
       setHighlightedStaffId(foundStaff ? foundStaff.staffID : null);
@@ -158,30 +158,33 @@ const WeeklyCalendar = ({
 
   const renderSidebar = () => {
     if (!selectedDate || !selectedShift) return null;
-
+  
     const dateString = selectedDate.format('YYYY-MM-DD');
     const isAM = selectedShift === 'AM';
-
+  
     let inOffice = [];
     let atHome = [];
-
+  
     if (scheduleData?.team && scheduleData.team.length > 0) {
       inOffice = scheduleData.team.filter(member => {
         const scheduleItem = member.scheduleTrails.find(item => item.date === dateString);
         if (!scheduleItem) return true;
         return isAM ? !scheduleItem.is_am : !scheduleItem.is_pm;
       });
-
+  
       atHome = scheduleData.team.filter(member => {
         const scheduleItem = member.scheduleTrails.find(item => item.date === dateString);
         if (!scheduleItem) return false;
         return isAM ? scheduleItem.is_am : scheduleItem.is_pm;
       });
     } else {
-      inOffice = [{ staffID: scheduleData?.staff?.staffID, name: 'Current Staff' }];
+      inOffice = [{ 
+        staffID: scheduleData?.staff?.staffID, 
+        fullName: scheduleData?.staff?.fullName || `Staff ${scheduleData?.staff?.staffID}`
+      }];
       atHome = [];
     }
-
+  
     return (
       <Drawer anchor="right" open={sidebarOpen} onClose={() => setSidebarOpen(false)}>
         <Box className="sidebar-content" role="presentation">
@@ -197,16 +200,26 @@ const WeeklyCalendar = ({
           <Typography variant="h6" className="sidebar-subtitle">In Office:</Typography>
           <List>
             {inOffice.map(member => (
-              <ListItem key={member.staffID} style={{ backgroundColor: member.staffID === highlightedStaffId ? '#e8f5e9' : 'transparent' }}>
-                <ListItemText primary={member.name || `Staff ${member.staffID}`} />
+              <ListItem 
+                key={member.staffID} 
+                style={{ 
+                  backgroundColor: member.staffID === highlightedStaffId ? '#e8f5e9' : 'transparent'
+                }}
+              >
+                <ListItemText primary={member.fullName} />
               </ListItem>
             ))}
           </List>
           <Typography variant="h6" className="sidebar-subtitle">Working from Home:</Typography>
           <List>
             {atHome.map(member => (
-              <ListItem key={member.staffID} style={{ backgroundColor: member.staffID === highlightedStaffId ? '#e8f5e9' : 'transparent' }}>
-                <ListItemText primary={member.name || `Staff ${member.staffID}`} />
+              <ListItem 
+                key={member.staffID} 
+                style={{ 
+                  backgroundColor: member.staffID === highlightedStaffId ? '#e8f5e9' : 'transparent'
+                }}
+              >
+                <ListItemText primary={member.fullName} />
               </ListItem>
             ))}
           </List>

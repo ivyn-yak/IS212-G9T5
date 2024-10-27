@@ -1,4 +1,3 @@
-// api/scheduleApi.js
 export const fetchManagerSchedule = async (managerId, startDate, endDate) => {
     try {
       // First fetch team members
@@ -7,6 +6,12 @@ export const fetchManagerSchedule = async (managerId, startDate, endDate) => {
         throw new Error(`Error fetching team data: ${teamResponse.status}`);
       }
       const teamMembers = await teamResponse.json();
+  
+      // Transform team data to include full names
+      const teamMembersWithNames = teamMembers.map(member => ({
+        ...member,
+        fullName: `${member.staff_fname} ${member.staff_lname}`
+      }));
   
       // Then fetch WFH schedule
       const scheduleResponse = await fetch(
@@ -26,30 +31,41 @@ export const fetchManagerSchedule = async (managerId, startDate, endDate) => {
       } else if (scheduleResponse.ok) {
         scheduleData = await scheduleResponse.json();
       } else {
-        throw new Error(`Error fetching schedule data: ${scheduleResponse.status}`);
+        throw new Error(`HTTP error! status: ${scheduleResponse.status}`);
       }
+  
+      // Find manager's data
+      const managerData = teamMembersWithNames.find(m => m.staff_id === parseInt(managerId));
   
       // Combine team data with schedule data
       return {
         staff: {
           staffID: scheduleData.staff.staff_id,
-          name: teamMembers.find(m => m.staff_id === parseInt(managerId))?.name,
-          scheduleTrails: scheduleData.staff.ScheduleDetails.map(detail => ({
+          fullName: managerData ? `${managerData.staff_fname} ${managerData.staff_lname}` : `Staff ${scheduleData.staff.staff_id}`,
+          position: managerData?.position,
+          department: managerData?.dept,
+          scheduleTrails: scheduleData.staff.ScheduleDetails?.map(detail => ({
             date: detail.specific_date,
             is_am: detail.is_am,
             is_pm: detail.is_pm
-          }))
+          })) || []
         },
-        team: teamMembers.map(member => ({
-          staffID: member.staff_id.toString(),
-          name: member.name,
-          scheduleTrails: (scheduleData.team.find(t => t.staff_id === member.staff_id)?.ScheduleDetails || [])
-            .map(detail => ({
+        team: teamMembersWithNames.map(member => {
+          // Find this team member's schedule in the schedule data
+          const memberSchedule = scheduleData.team.find(t => t.staff_id === member.staff_id)?.ScheduleDetails || [];
+          
+          return {
+            staffID: member.staff_id.toString(),
+            fullName: `${member.staff_fname} ${member.staff_lname}`,
+            position: member.position,
+            department: member.dept,
+            scheduleTrails: memberSchedule.map(detail => ({
               date: detail.specific_date,
               is_am: detail.is_am,
               is_pm: detail.is_pm
             }))
-        }))
+          };
+        })
       };
     } catch (error) {
       console.error('Error fetching manager schedule:', error);
@@ -66,6 +82,12 @@ export const fetchManagerSchedule = async (managerId, startDate, endDate) => {
       }
       const teamMembers = await teamResponse.json();
   
+      // Transform team data to include full names
+      const teamMembersWithNames = teamMembers.map(member => ({
+        ...member,
+        fullName: `${member.staff_fname} ${member.staff_lname}`
+      }));
+  
       // Fetch staff's own WFH schedule
       const staffResponse = await fetch(
         `http://localhost:5001/api/staff/${staffId}/wfh_requests?start_date=${startDate}&end_date=${endDate}`
@@ -73,11 +95,9 @@ export const fetchManagerSchedule = async (managerId, startDate, endDate) => {
       
       let staffSchedule = [];
       if (staffResponse.status === 404) {
-        // If no data found, leave the schedule empty (meaning all office days)
         staffSchedule = [];
       } else if (staffResponse.ok) {
         const staffData = await staffResponse.json();
-        console.log(staffData);
         staffSchedule = staffData.map(detail => ({
           date: detail.specific_date,
           is_am: detail.is_am,
@@ -87,33 +107,33 @@ export const fetchManagerSchedule = async (managerId, startDate, endDate) => {
         throw new Error(`HTTP error! status: ${staffResponse.status}`);
       }
   
-      // Fetch team's WFH schedule
+      // Fetch team schedule
       const teamScheduleResponse = await fetch(
         `http://localhost:5001/api/team/${staffId}/schedule?start_date=${startDate}&end_date=${endDate}`
       );
   
       let teamScheduleData = [];
       if (teamScheduleResponse.status === 404) {
-        // If no team schedule data found, use empty array (meaning all office days)
         teamScheduleData = [];
       } else if (teamScheduleResponse.ok) {
         teamScheduleData = await teamScheduleResponse.json();
-      } else {
-        throw new Error(`HTTP error! status: ${teamScheduleResponse.status}`);
       }
   
-      // Combine all data
+      // Find current staff's data
+      const currentStaff = teamMembersWithNames.find(m => m.staff_id === parseInt(staffId));
+  
+      // Return combined data
       return {
         staff: {
           staffID: staffId,
-          name: teamMembers.find(m => m.staff_id === parseInt(staffId))?.name,
+          fullName: currentStaff ? `${currentStaff.staff_fname} ${currentStaff.staff_lname}` : `Staff ${staffId}`,
           scheduleTrails: staffSchedule
         },
-        team: teamMembers
-          .filter(member => member.staff_id !== parseInt(staffId)) // Exclude current staff from team list
+        team: teamMembersWithNames
+          .filter(member => member.staff_id !== parseInt(staffId))
           .map(member => ({
             staffID: member.staff_id.toString(),
-            name: member.name,
+            fullName: `${member.staff_fname} ${member.staff_lname}`,
             scheduleTrails: (teamScheduleData.find(t => t.staff_id === member.staff_id)?.ScheduleDetails || [])
               .map(detail => ({
                 date: detail.specific_date,
