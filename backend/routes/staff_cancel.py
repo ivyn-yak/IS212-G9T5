@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify
-from models import WFHRequests, WFHRequestLogs
+from models import WFHRequests, WFHRequestLogs, db
 from datetime import datetime, timezone, timedelta
-from server import db  
+ 
 
 staff_cancel = Blueprint('staff_cancel', __name__)
 
