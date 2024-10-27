@@ -22,13 +22,15 @@ const RequestsTable = ({ staffId }) => {
     setError(null);
     try {
       const response = await axios.get(`http://localhost:5001/api/staff/${staffId}/all_wfh_dates`);
-      // localhost:5001/api/staff/140003/all_wfh_dates
-      console.log(response.data);
       setRequests(response.data);
       setFilteredRequests(response.data);
     } catch (error) {
       console.error('Error fetching requests:', error);
-      setError('Failed to fetch requests. Please try again later.');
+      if (error.response && error.response.status === 404) {
+        setError('No WFH requests found for this staff member.');
+      } else {
+        setError('Failed to fetch requests. Please try again later.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -38,7 +40,6 @@ const RequestsTable = ({ staffId }) => {
     const filtered = requests.filter(request => {
       return (
         (filters.date ? request.specific_date === filters.date : true) &&
-        // (filters.type ? request.request_type === filters.type : true) &&
         (filters.status ? request.request_status === filters.status : true)
       );
     });
@@ -60,27 +61,48 @@ const RequestsTable = ({ staffId }) => {
     return <div>Loading...</div>;
   }
 
+  // If there's an error but it's the "No requests found" message,
+  // we'll show it in a more user-friendly way
+  if (error === 'No WFH requests found for this staff member.') {
+    return (
+      <div className="request-table">
+        <div className="filter-section">
+          <input
+            type="date"
+            value={filters.date}
+            onChange={(e) => setFilters({ ...filters, date: e.target.value })}
+          />
+          <select
+            value={filters.status}
+            onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+          >
+            <option value="">Select Status</option>
+            <option value="Approved">Approved</option>
+            <option value="Rejected">Rejected</option>
+            <option value="Withdrawal">Withdrawal</option>
+            <option value="Cancelled">Cancelled</option>
+            <option value="Pending">Pending</option>
+          </select>
+          <button onClick={handleFilter}>Filter</button>
+        </div>
+        <p className="no-requests-message">{error}</p>
+      </div>
+    );
+  }
+
+  // For other types of errors, show the error message
   if (error) {
-    return <div>Error: {error}</div>;
+    return <div className="error-message">Error: {error}</div>;
   }
 
   return (
     <div className="request-table">
       <div className="filter-section">
-      <input
+        <input
           type="date"
           value={filters.date}
           onChange={(e) => setFilters({ ...filters, date: e.target.value })}
         />
-        {/* <select
-          value={filters.type}
-          onChange={(e) => setFilters({ ...filters, type: e.target.value })}
-        >
-          <option value="">Select Type</option>
-          <option value="Full Day">Full Day</option>
-          <option value="Morning">Morning</option>
-          <option value="Afternoon">Afternoon</option>
-        </select> */}
         <select
           value={filters.status}
           onChange={(e) => setFilters({ ...filters, status: e.target.value })}
@@ -122,7 +144,7 @@ const RequestsTable = ({ staffId }) => {
           </tbody>
         </table>
       ) : (
-        <p>No requests found.</p>
+        <p>No requests match your filter criteria.</p>
       )}
     </div>
   );
