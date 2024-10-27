@@ -11,6 +11,7 @@ from routes.manager_approve import approve
 from routes.staff_requests import requests
 from routes.staff_withdraw import withdraw
 from routes.manager_view import manager_view
+from routes.staff_cancel import staff_cancel
 
 from app.utils import celery_init_app
 from app import task
@@ -57,6 +58,7 @@ def create_app():
     app.register_blueprint(requests)
     app.register_blueprint(withdraw)
     app.register_blueprint(manager_view)
+    app.register_blueprint(staff_cancel)
 
     db.init_app(app)
 
