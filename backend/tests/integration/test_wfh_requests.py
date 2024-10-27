@@ -3,6 +3,7 @@ import flask_testing
 from server import app, db
 from models import *
 import datetime
+from unittest.mock import patch
 
 class TestApp(flask_testing.TestCase):
     app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite://"
@@ -15,7 +16,7 @@ class TestApp(flask_testing.TestCase):
     def setUp(self):
         db.create_all()
 
-        employee = Employee(
+        self.employee = Employee(
             staff_id=140008,
             staff_fname="Jaclyn",
             staff_lname="Lee",
@@ -27,7 +28,7 @@ class TestApp(flask_testing.TestCase):
             role=3
         )
 
-        manager = Employee(
+        self.manager = Employee(
             staff_id=140001,
             staff_fname="Derek",
             staff_lname="Tan",
@@ -39,40 +40,39 @@ class TestApp(flask_testing.TestCase):
             role=1
         )
 
-        wfh_request1 = WFHRequests(
-                request_id='1',
-                staff_id=140008,
-                manager_id=140001,
-                specific_date=datetime.date(2024, 9, 15),
-                is_am=True,
-                is_pm=True,
-                request_status='Approved',
-                apply_date=datetime.date(2024, 9, 30),
-                request_reason="Sick"
-            )
-        
-        wfh_request2 = WFHRequests(
-                request_id='2',
-                staff_id=140008,
-                manager_id=140001,
-                specific_date=datetime.date(2024, 10, 1),
-                is_am=True,
-                is_pm=True,
-                request_status='Pending',
-                apply_date=datetime.date(2024, 9, 30),
-                request_reason="Sick"
-            )
+        self.wfh_request1 = WFHRequests(
+            request_id='1',
+            staff_id=140008,
+            manager_id=140001,
+            specific_date=datetime.date(2024, 9, 15),
+            is_am=True,
+            is_pm=True,
+            request_status='Approved',
+            apply_date=datetime.date(2024, 9, 30),
+            request_reason="Sick"
+        )
 
-        db.session.add(employee)
-        db.session.add(manager)
-        db.session.add(wfh_request1)
-        db.session.add(wfh_request2)
+        self.wfh_request2 = WFHRequests(
+            request_id='2',
+            staff_id=140008,
+            manager_id=140001,
+            specific_date=datetime.date(2024, 10, 1),
+            is_am=True,
+            is_pm=True,
+            request_status='Pending',
+            apply_date=datetime.date(2024, 9, 30),
+            request_reason="Sick"
+        )
+
+        db.session.add(self.employee)
+        db.session.add(self.manager)
+        db.session.add(self.wfh_request1)
+        db.session.add(self.wfh_request2)
         db.session.commit()
 
     def tearDown(self):
         db.session.remove()
         db.drop_all()
-
 
 class TestWFHRequests(TestApp):
     # Get all WFH requests for a specific staff id
@@ -164,6 +164,52 @@ class TestWFHRequests(TestApp):
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.get_json(), {"message": "No WFH requests found for this staff member in the given date range"})
 
+    # Test getting the entire team schedule for a given staff member
+    @patch('util.employee.get_full_team')
+    def test_get_team_schedule(self, mock_get_full_team):
+        mock_get_full_team.return_value = [self.employee]
+
+        response = self.client.get("/api/team/140008/schedule?start_date=2024-09-01&end_date=2024-09-30", content_type='application/json')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json(), [
+            {
+                "staff_id": 140008,
+                "ScheduleDetails": [
+                    {
+                        "request_id": '1',
+                        "staff_id": 140008,
+                        "manager_id": 140001,
+                        "specific_date": '2024-09-15',
+                        "is_am": True,
+                        "is_pm": True,
+                        "request_status": 'Approved',
+                        "apply_date": '2024-09-30',
+                        "request_reason": 'Sick'
+                    }
+                ]
+            }
+        ])
+
+    # Test missing date range parameters for team schedule
+    def test_get_team_schedule_missing_date_range(self):
+        response = self.client.get("/api/team/140008/schedule", content_type='application/json')
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_json(), {"error": "Please provide both start_date and end_date"})
+
+    # Test invalid staff ID for team schedule
+    def test_get_team_schedule_invalid_staff_id(self):
+        response = self.client.get("/api/team/999/schedule?start_date=2024-09-01&end_date=2024-09-30", content_type='application/json')
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.get_json(), {"error": "Invalid staff ID"})
+
+    # Test no WFH requests found for team schedule
+    @patch('util.employee.get_full_team')
+    def test_get_team_schedule_no_data(self, mock_get_full_team):
+        mock_get_full_team.return_value = [self.employee]
+
+        response = self.client.get("/api/team/140008/schedule?start_date=2025-01-01&end_date=2025-01-31", content_type='application/json')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json(), [])
 
 if __name__ == '__main__':
     unittest.main()
