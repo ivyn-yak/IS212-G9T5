@@ -21,9 +21,11 @@ const RequestsTable = ({ staffId }) => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await axios.get(`http://localhost:5001/api/${staffId}`);
-      setRequests(response.data.data);
-      setFilteredRequests(response.data.data);
+      const response = await axios.get(`http://localhost:5001/api/staff/${staffId}/all_wfh_dates`);
+      // localhost:5001/api/staff/140003/all_wfh_dates
+      console.log(response.data);
+      setRequests(response.data);
+      setFilteredRequests(response.data);
     } catch (error) {
       console.error('Error fetching requests:', error);
       setError('Failed to fetch requests. Please try again later.');
@@ -35,18 +37,19 @@ const RequestsTable = ({ staffId }) => {
   const handleFilter = () => {
     const filtered = requests.filter(request => {
       return (
-        (filters.date ? request.start_date === filters.date : true) &&
-        (filters.type ? request.request_type === filters.type : true) &&
+        (filters.date ? request.specific_date === filters.date : true) &&
+        // (filters.type ? request.request_type === filters.type : true) &&
         (filters.status ? request.request_status === filters.status : true)
       );
     });
     setFilteredRequests(filtered);
   };
 
-  const handleCancel = async (id) => {
+  const handleCancel = async (request_id, specific_date, staff_id) => {
     try {
-      await axios.post(`/api/cancel-request/${id}`);
-      fetchRequests();
+      // await axios.post(`/api/cancel-request/${id}`);
+      console.log('Request cancelled:', request_id, specific_date, staff_id);
+      // fetchRequests();
     } catch (error) {
       console.error('Error cancelling request:', error);
       setError('Failed to cancel request. Please try again.');
@@ -69,7 +72,7 @@ const RequestsTable = ({ staffId }) => {
           value={filters.date}
           onChange={(e) => setFilters({ ...filters, date: e.target.value })}
         />
-        <select
+        {/* <select
           value={filters.type}
           onChange={(e) => setFilters({ ...filters, type: e.target.value })}
         >
@@ -77,7 +80,7 @@ const RequestsTable = ({ staffId }) => {
           <option value="Full Day">Full Day</option>
           <option value="Morning">Morning</option>
           <option value="Afternoon">Afternoon</option>
-        </select>
+        </select> */}
         <select
           value={filters.status}
           onChange={(e) => setFilters({ ...filters, status: e.target.value })}
@@ -96,9 +99,7 @@ const RequestsTable = ({ staffId }) => {
           <thead>
             <tr>
               <th>ID</th>
-              <th>Start Date</th>
-              <th>End Date</th>
-              <th>Type</th>
+              <th>Date</th>
               <th>Status</th>
               <th>Action</th>
             </tr>
@@ -107,13 +108,13 @@ const RequestsTable = ({ staffId }) => {
             {filteredRequests.map((request) => (
               <tr key={request.request_id}>
                 <td>{request.request_id}</td>
-                <td>{request.start_date}</td>
-                <td>{request.end_date}</td>
-                <td>{request.request_type}</td>
+                <td>{request.specific_date}</td>
                 <td>{request.request_status}</td>
                 <td>
-                  {request.request_status === 'Pending' && (
-                    <button onClick={() => handleCancel(request.request_id)}>Cancel</button>
+                  {request.request_status === 'Pending' ? (
+                    <button onClick={() => handleCancel(request.request_id, request.specific_date, staffId)}>Cancel</button>
+                  ) : (
+                    'No Actions Available'
                   )}
                 </td>
               </tr>
