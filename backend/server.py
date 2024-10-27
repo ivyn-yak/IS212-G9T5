@@ -11,6 +11,7 @@ from routes.manager_approve import approve
 from routes.staff_requests import requests
 from routes.staff_withdraw import withdraw
 from routes.manager_view import manager_view
+from routes.staff_cancel import staff_cancel
 
 load_dotenv()
 
@@ -35,6 +36,7 @@ app.register_blueprint(approve)
 app.register_blueprint(requests)
 app.register_blueprint(withdraw)
 app.register_blueprint(manager_view)
+app.register_blueprint(staff_cancel)
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5001, debug=True)
