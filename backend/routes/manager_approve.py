@@ -4,6 +4,7 @@ from util.wfh_requests import *
 from util.request_decisions import *
 from util.wfh_dates import *
 from util.wfh_request_logs import *
+from util.withdraw_decision import *
 from datetime import timedelta
 from datetime import date
 from sqlalchemy import and_
@@ -248,7 +249,7 @@ def manager_approve_withdrawal():
         if new_req is None:
             return jsonify({"error": "Request update failed"}), 500
         
-        decision = create_withdrawal_decision(
+        decision = create_withdraw_decision(
             request_id = request_id, 
             specific_date = req['specific_date'],
             manager_id = reporting_manager_id, 
