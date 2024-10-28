@@ -53,7 +53,7 @@ const Sidebar = ({ staffRole }) => {
       heading: 'APPLICATION',
       items: [
         {
-          text: '<My Requests',
+          text: 'My Requests',
           icon: <Assignment className="sidebar-icon" />,
           to: `/${staffId}/2/requests`
         },
