@@ -14,6 +14,13 @@ const RequestsTable = ({ staffId }) => {
     status: '',
   });
 
+  const getShiftType = (is_am, is_pm) => {
+    if (is_am && is_pm) return "Full Day";
+    if (is_am) return "AM Shift";
+    if (is_pm) return "PM Shift";
+    return "Unknown";
+  };
+
   useEffect(() => {
     fetchRequests();
   }, [staffId]);
@@ -23,8 +30,13 @@ const RequestsTable = ({ staffId }) => {
     setError(null);
     try {
       const response = await axios.get(`http://localhost:5001/api/staff/${staffId}/all_wfh_dates`);
-      setRequests(response.data);
-      setFilteredRequests(response.data);
+      // Add shift type to each request
+      const requestsWithShiftType = response.data.map(request => ({
+        ...request,
+        shiftType: getShiftType(request.is_am, request.is_pm)
+      }));
+      setRequests(requestsWithShiftType);
+      setFilteredRequests(requestsWithShiftType);
     } catch (error) {
       console.error('Error fetching requests:', error);
       if (error.response && error.response.status === 404) {
@@ -51,12 +63,11 @@ const RequestsTable = ({ staffId }) => {
     try {
       setCancelError(null);
       
-      // Format the date to match the backend's expected format (YYYY-MM-DD)
       const formattedDate = new Date(specific_date).toISOString().split('T')[0];
       
       const response = await axios.put(
         `http://localhost:5001/api/staff/${staff_id}/cancel_request/${request_id}/${formattedDate}`,
-        {}, // Empty body
+        {},
         {
           headers: {
             'Content-Type': 'application/json'
@@ -65,7 +76,6 @@ const RequestsTable = ({ staffId }) => {
       );
 
       if (response.status === 200) {
-        // Update the local state to reflect the cancellation
         const updatedRequests = requests.map(request => {
           if (request.request_id === request_id && request.specific_date === specific_date) {
             return { ...request, request_status: 'Cancelled' };
@@ -105,8 +115,6 @@ const RequestsTable = ({ staffId }) => {
     return <div>Loading...</div>;
   }
 
-  // If there's an error but it's the "No requests found" message,
-  // we'll show it in a more user-friendly way
   if (error === 'No WFH requests found for this staff member.') {
     return (
       <div className="request-table">
@@ -134,7 +142,6 @@ const RequestsTable = ({ staffId }) => {
     );
   }
 
-  // For other types of errors, show the error message
   if (error) {
     return <div className="error-message">Error: {error}</div>;
   }
@@ -173,6 +180,7 @@ const RequestsTable = ({ staffId }) => {
             <tr>
               <th>ID</th>
               <th>Date</th>
+              <th>Shift Type</th>
               <th>Status</th>
               <th>Action</th>
             </tr>
@@ -182,6 +190,7 @@ const RequestsTable = ({ staffId }) => {
               <tr key={`${request.request_id}-${request.specific_date}`}>
                 <td>{request.request_id}</td>
                 <td>{request.specific_date}</td>
+                <td>{request.shiftType}</td>
                 <td>{request.request_status}</td>
                 <td>
                   {request.request_status === 'Pending' ? (
