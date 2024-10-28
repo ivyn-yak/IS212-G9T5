@@ -30,8 +30,8 @@ def create_app():
 
     app.config.from_mapping(
         CELERY=dict(
-            broker_url="redis://localhost:6379",
-            result_backend="redis://localhost:6379",
+            broker_url="redis://redis",
+            result_backend="redis://redis",
             task_ignore_result=True,
             beat_schedule={
                 # FOR TESTING
