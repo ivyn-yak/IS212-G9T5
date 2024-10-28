@@ -7,6 +7,7 @@ const RequestsTable = ({ staffId }) => {
   const [filteredRequests, setFilteredRequests] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [cancelError, setCancelError] = useState(null);
   const [filters, setFilters] = useState({
     date: '',
     type: '',
@@ -48,12 +49,55 @@ const RequestsTable = ({ staffId }) => {
 
   const handleCancel = async (request_id, specific_date, staff_id) => {
     try {
-      // await axios.post(`/api/cancel-request/${id}`);
-      console.log('Request cancelled:', request_id, specific_date, staff_id);
-      // fetchRequests();
+      setCancelError(null);
+      
+      // Format the date to match the backend's expected format (YYYY-MM-DD)
+      const formattedDate = new Date(specific_date).toISOString().split('T')[0];
+      
+      const response = await axios.put(
+        `http://localhost:5001/api/staff/${staff_id}/cancel_request/${request_id}/${formattedDate}`,
+        {}, // Empty body
+        {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.status === 200) {
+        // Update the local state to reflect the cancellation
+        const updatedRequests = requests.map(request => {
+          if (request.request_id === request_id && request.specific_date === specific_date) {
+            return { ...request, request_status: 'Cancelled' };
+          }
+          return request;
+        });
+        setRequests(updatedRequests);
+        setFilteredRequests(updatedRequests);
+        
+        alert('Request cancelled successfully');
+      }
     } catch (error) {
       console.error('Error cancelling request:', error);
-      setError('Failed to cancel request. Please try again.');
+      
+      if (error.response) {
+        const errorMessage = error.response.data.error || 'Failed to cancel request.';
+        setCancelError(errorMessage);
+        alert(errorMessage);
+      } else if (error.request) {
+        setCancelError('Network error. Please check your connection.');
+        alert('Network error. Please check your connection.');
+      } else {
+        setCancelError('An unexpected error occurred.');
+        alert('An unexpected error occurred.');
+      }
+    }
+  };
+
+  const confirmCancel = (request_id, specific_date, staff_id) => {
+    const confirmed = window.confirm('Are you sure you want to cancel this request?');
+    if (confirmed) {
+      handleCancel(request_id, specific_date, staff_id);
     }
   };
 
@@ -116,6 +160,13 @@ const RequestsTable = ({ staffId }) => {
         </select>
         <button onClick={handleFilter}>Filter</button>
       </div>
+      
+      {cancelError && (
+        <div className="error-message" style={{ color: 'red', margin: '10px 0' }}>
+          {cancelError}
+        </div>
+      )}
+
       {Array.isArray(filteredRequests) && filteredRequests.length > 0 ? (
         <table>
           <thead>
@@ -128,13 +179,18 @@ const RequestsTable = ({ staffId }) => {
           </thead>
           <tbody>
             {filteredRequests.map((request) => (
-              <tr key={request.request_id}>
+              <tr key={`${request.request_id}-${request.specific_date}`}>
                 <td>{request.request_id}</td>
                 <td>{request.specific_date}</td>
                 <td>{request.request_status}</td>
                 <td>
                   {request.request_status === 'Pending' ? (
-                    <button onClick={() => handleCancel(request.request_id, request.specific_date, staffId)}>Cancel</button>
+                    <button 
+                      onClick={() => confirmCancel(request.request_id, request.specific_date, staffId)}
+                      className="cancel-button"
+                    >
+                      Cancel
+                    </button>
                   ) : (
                     'No Actions Available'
                   )}
