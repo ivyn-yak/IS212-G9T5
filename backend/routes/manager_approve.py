@@ -210,14 +210,15 @@ def manager_approve_withdrawal():
     if not data: 
         return jsonify({"error": "Invalid JSON or no data provided"}), 400
     
-    required_fields = ["request_id", 'decision_status', "decision_notes", "manager_id"]
+    required_fields = ["request_id","specific_date", 'decision_status', "decision_notes", "manager_id"]
     for field in required_fields: 
         if field not in data: 
             return jsonify({"error": f"Missing '{field}' in request"}),400
     
     try:
         request_id = data["request_id"]
-        req = get_request_by_id(request_id)
+        specific_date = data['specific_date']
+        req = get_request(request_id, specific_date)
         if not req: 
             return jsonify({"error": "Request not found"}), 404
         
