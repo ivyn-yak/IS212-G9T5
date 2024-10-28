@@ -15,7 +15,6 @@ const WithdrawalForm = ({ staffId }) => {
 
   const fetchApprovedSchedules = async () => {
     try {
-      // Calculate date range (2 months back and 3 months forward)
       const today = new Date();
       const startDate = format(subMonths(today, 2), 'yyyy-MM-dd');
       const endDate = format(addMonths(today, 3), 'yyyy-MM-dd');
@@ -49,20 +48,32 @@ const WithdrawalForm = ({ staffId }) => {
     setIsLoading(true);
     
     try {
-      const response = await fetch('/api/withdraw', {
+      // Find the selected schedule object
+      const selectedRequest = approvedSchedules.find(
+        schedule => schedule.id.toString() === selectedSchedule
+      );
+
+      if (!selectedRequest) {
+        setMessage('Invalid schedule selected');
+        return;
+      }
+
+      const response = await fetch('http://localhost:5001/api/withdraw', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          scheduleId: selectedSchedule,
-          reason,
-          staffId
+          request_id: parseInt(selectedSchedule),
+          reason: reason,
+          specific_date: selectedRequest.specific_date
         }),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        setMessage('Failed to submit withdrawal');
+        setMessage(data.error || 'Failed to submit withdrawal');
         return;
       }
 
