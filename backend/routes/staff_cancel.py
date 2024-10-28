@@ -5,7 +5,7 @@ from datetime import datetime, timezone, timedelta
 
 staff_cancel = Blueprint('staff_cancel', __name__)
 
-@staff_cancel.route('/api/staff/<int:staff_id>/cancel_request/<int:request_id>/<string:specific_date>', methods=['PUT'])
+@staff_cancel.route('/api/staff/<int:staff_id>/cancel_request/<string:request_id>/<string:specific_date>', methods=['PUT'])
 def cancel_pending_request(staff_id, request_id, specific_date):
     try:
         # Parse the specific_date from the string to a date object
