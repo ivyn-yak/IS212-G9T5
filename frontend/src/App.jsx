@@ -12,6 +12,8 @@ import PendingRequests from './components/approval/PendingRequests';
 import WFHRequestForm from './components/apply/WFHRequestForm';
 import WithdrawalFormView from './pages/WithdrawalFormView';
 import StaffRequestsView from './pages/StaffRequestsView';
+import WithdrawalRequests from './components/withdrawRequests/withdrawalRequests';
+import WithdrawalApprovalScreen from './components/withdrawRequests/withdrawalApprovalScreen';
 import './App.css';
 
 // Define roles as constants for better maintainability
@@ -130,6 +132,16 @@ function AppContent() {
                 <Route path="pending-requests" element={
                   <ProtectedRoute allowedRoles={[ROLES.MANAGER]} staffRole={staffRole}>
                     <PendingRequests staffId={staffId} />
+                  </ProtectedRoute>
+                } />
+                <Route path="withdrawal-requests" element={
+                  <ProtectedRoute allowedRoles={[ROLES.MANAGER]} staffRole={staffRole}>
+                    <WithdrawalRequests/>
+                  </ProtectedRoute>
+                } />
+                <Route path="withdrawal-approval/:approval_staff_id/:withdrawal_id" element={
+                  <ProtectedRoute allowedRoles={[ROLES.MANAGER]} staffRole={staffRole}>
+                    <WithdrawalApprovalScreen />
                   </ProtectedRoute>
                 } />
               </Route>

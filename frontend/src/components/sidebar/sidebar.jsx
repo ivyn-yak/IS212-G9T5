@@ -53,7 +53,7 @@ const Sidebar = ({ staffRole }) => {
       heading: 'APPLICATION',
       items: [
         {
-          text: 'Requests',
+          text: '<My Requests',
           icon: <Assignment className="sidebar-icon" />,
           to: `/${staffId}/2/requests`
         },
@@ -113,10 +113,25 @@ const Sidebar = ({ staffRole }) => {
       ]
     },
     {
+      heading: 'APPROVAL MANAGEMENT',
+      items: [
+        {
+          text: 'Pending Requests',
+          icon: <Approval className="sidebar-icon" />,
+          to: `/${staffId}/3/pending-requests`
+        },
+        {
+          text: 'Withdrawal Requests',
+          icon: <School className="sidebar-icon" />,
+          to: `/${staffId}/3/withdrawal-requests`
+        }
+      ]
+    },
+    {
       heading: 'APPLICATION',
       items: [
         {
-          text: 'Requests',
+          text: 'My Requests',
           icon: <Assignment className="sidebar-icon" />,
           to: `/${staffId}/2/requests`
         },
@@ -124,11 +139,6 @@ const Sidebar = ({ staffRole }) => {
           text: 'Apply',
           icon: <ListAlt className="sidebar-icon" />,
           to: `/${staffId}/2/wfh-request`
-        },
-        {
-          text: 'Pending Requests',
-          icon: <Approval className="sidebar-icon" />,
-          to: `/${staffId}/3/pending-requests`
         }
       ]
     },
