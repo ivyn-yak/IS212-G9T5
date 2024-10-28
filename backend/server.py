@@ -19,6 +19,9 @@ from celery.schedules import crontab
 
 load_dotenv()
 
+CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL")
+CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND")
+
 def create_app():
     app = Flask(__name__)
 
@@ -31,8 +34,8 @@ def create_app():
 
     app.config.from_mapping(
         CELERY=dict(
-            broker_url="redis://redis",
-            result_backend="redis://redis",
+            broker_url=CELERY_BROKER_URL,
+            result_backend=CELERY_RESULT_BACKEND,
             task_ignore_result=True,
             beat_schedule={
                 # FOR TESTING
