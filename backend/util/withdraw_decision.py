@@ -4,11 +4,12 @@ from models import *
 def create_withdraw_decision(data):
     try:
         decision_date = datetime.now()
+        specific_date = datetime.strptime(data['specific_date'], '%Y-%m-%d').date()
         new_decision = WithdrawDecisions(
-            request_id=data["request_id"],
-            specific_date=data["specific_date"],
+            request_id=int(data["request_id"]),
+            specific_date=specific_date,
             manager_id=data["manager_id"],
-            decision_date=data["decision_date"],
+            decision_date=decision_date.date(),
             decision_status=data["decision_status"],
             decision_notes=data["decision_notes"]
         )
@@ -18,10 +19,10 @@ def create_withdraw_decision(data):
         
         return {
             "withdraw_decision_id": new_decision.withdraw_decision_id,
-            "request_id": data["request_id"],
-            "specific_date": data["specific_date"],
+            "request_id": str(data["request_id"]),
+            "specific_date": specific_date.strftime('%Y-%m-%d'),
             "manager_id": data["manager_id"],
-            "decision_date": data["decision_date"],
+            "decision_date": decision_date.strftime('%Y-%m-%d'),
             "decision_status": data["decision_status"],
             "decision_notes": data["decision_notes"]
         }

@@ -220,8 +220,8 @@ def manager_approve_withdrawal():
         specific_date = data['specific_date']
         req = get_request(request_id, specific_date)
         if not req: 
-            return jsonify({"error": "Request not found"}), 404
-        
+            return jsonify({"error": "Request not found"}), 400
+
         staff_id = req["staff_id"]
         employee = Employee.query.filter_by(staff_id=staff_id).first()
         if not employee: 
@@ -235,7 +235,7 @@ def manager_approve_withdrawal():
             return jsonify({"error": f"Employee {staff_id} reports under {req['manager_id']} instead of {data['manager_id']}"}), 400
         
         request_status = req["request_status"]
-        if request_status != "Pending Withdraw":
+        if request_status != "Pending_Withdraw":
             return jsonify({"error": f"Manager cannot approve or reject request with {request_status} status"}), 400
         
         decision_status = data["decision_status"]
@@ -250,23 +250,19 @@ def manager_approve_withdrawal():
         if new_req is None:
             return jsonify({"error": "Request update failed"}), 500
         
-        decision = create_withdraw_decision(
-            request_id = request_id, 
-            specific_date = req['specific_date'],
-            manager_id = reporting_manager_id, 
-            decision_status = decision_status, 
-            decision_notes = data["decision_notes"]
-        )
+        decision = create_withdraw_decision(data)
+        # print("Decision returned:", decision)
         if "error" in decision:
             return jsonify(decision), 500
         
         return jsonify({
             "message": "Withdrawal request updated and manager's decision stored successfully",
             "request": new_req["new_request"],
-            "decision": decision["decision"]
+            "decision": decision
         }), 201
     
     except Exception as e:
         db.session.rollback()
+        print(f"Error: {str(e)}")
         return jsonify({"error": str(e)}), 500
         
