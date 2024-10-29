@@ -230,7 +230,7 @@ def manager_approve_withdrawal():
         reporting_manager_id = data["manager_id"]
         manager = Employee.query.filter_by(staff_id=reporting_manager_id).first()
         if not manager: 
-            return jsonify({"error": f"Reporting manager for employee {staff_id} not found"}), 404
+            return jsonify({"error": f"Reporting manager not found"}), 404
         if manager.staff_id != req["manager_id"]:
             return jsonify({"error": f"Employee {staff_id} reports under {req['manager_id']} instead of {data['manager_id']}"}), 400
         

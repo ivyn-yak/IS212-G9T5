@@ -29,6 +29,18 @@ class TestApp(flask_testing.TestCase):
             reporting_manager=None,  
             role=1
         )
+        self.manager_2 = Employee(
+            staff_id=140002,
+            staff_fname="Jakobson",
+            staff_lname="Tan",
+            dept="HR",
+            position="Director",
+            country="Singapore",
+            email="Jakobson@allinone.com.sg",
+            reporting_manager=None,  
+            role=1
+        )
+
         self.employee_1 = Employee(
             staff_id=140008,
             staff_fname="Jaclyn",
@@ -75,6 +87,7 @@ class TestApp(flask_testing.TestCase):
         )
 
         db.session.add(self.manager)
+        db.session.add(self.manager_2)
         db.session.add(self.employee_1)
         db.session.add(self.employee_2)
         db.session.add(self.employee_3)
@@ -155,6 +168,120 @@ class TestApp(flask_testing.TestCase):
                                     content_type='application/json')
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.get_json(), {"error": "Request not found"})
+
+    def test_manager_approve_withdrawal_manager_id_not_found(self):
+        wfh_request_1 = WFHRequests(
+            request_id=1,
+            staff_id=140008,
+            manager_id=140001,
+            specific_date=datetime.strptime("2024-09-15", '%Y-%m-%d'),
+            request_status='Pending_Withdraw',
+            apply_date=date(2024, 9, 30),
+            request_reason='Personal matters',
+            is_am=False,
+            is_pm=True
+        )
+        db.session.add(wfh_request_1)
+        db.session.commit()
+        request_body = {
+            "request_id": 1,  
+            "specific_date": "2024-09-15",
+            "manager_id": 999999,  # Using an invalid/non-existent manager ID
+            "decision_status": "Approved",
+            "decision_notes": "Approved by manager"
+        }
+        response = self.client.post('/api/approve_withdrawal', 
+                                    data=json.dumps(request_body), 
+                                    content_type='application/json')
+        
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.get_json(), {"error": f"Reporting manager not found"})
+
+    def test_manager_approve_withdrawal_wrong_manager_id(self):
+        wfh_request_1 = WFHRequests(
+            request_id=1,
+            staff_id=140008,
+            manager_id=140001,
+            specific_date=datetime.strptime("2024-09-15", '%Y-%m-%d'),
+            request_status='Pending_Withdraw',
+            apply_date=date(2024, 9, 30),
+            request_reason='Personal matters',
+            is_am=False,
+            is_pm=True
+        )
+        db.session.add(wfh_request_1)
+        db.session.commit()
+        request_body = {
+            "request_id": 1,  
+            "specific_date": "2024-09-15",
+            "manager_id": 140002,  # Using wrong manager ID
+            "decision_status": "Approved",
+            "decision_notes": "Approved by manager"
+        }
+        response = self.client.post('/api/approve_withdrawal', 
+                                    data=json.dumps(request_body), 
+                                    content_type='application/json')
+        
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_json(), {"error": f"Employee {wfh_request_1.staff_id} reports under {wfh_request_1.manager_id} instead of {request_body['manager_id']}"})
+
+    def test_manager_approve_withdrawal_wrong_status(self):
+        wfh_request_1 = WFHRequests(
+            request_id=1,
+            staff_id=140008,
+            manager_id=140001,
+            specific_date=datetime.strptime("2024-09-15", '%Y-%m-%d'),
+            request_status='Approved',
+            apply_date=date(2024, 9, 30),
+            request_reason='Personal matters',
+            is_am=False,
+            is_pm=True
+        )
+        db.session.add(wfh_request_1)
+        db.session.commit()
+        request_body = {
+            "request_id": 1,  
+            "specific_date": "2024-09-15",
+            "manager_id": 140001, 
+            "decision_status": "Approved",
+            "decision_notes": "Approved by manager"
+        }
+        response = self.client.post('/api/approve_withdrawal', 
+                                    data=json.dumps(request_body), 
+                                    content_type='application/json')
+        
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_json(), {"error": f"Manager cannot approve or reject request with {wfh_request_1.request_status} status"})
+
+    def test_manager_approve_withdrawal_invalid_decision_status(self):
+        wfh_request_1 = WFHRequests(
+            request_id=1,
+            staff_id=140008,
+            manager_id=140001,
+            specific_date=datetime.strptime("2024-09-15", '%Y-%m-%d'),
+            request_status='Pending_Withdraw',
+            apply_date=date(2024, 9, 30),
+            request_reason='Personal matters',
+            is_am=False,
+            is_pm=True
+        )
+        db.session.add(wfh_request_1)
+        db.session.commit()
+        request_body = {
+            "request_id": 1,  
+            "specific_date": "2024-09-15",
+            "manager_id": 140001, 
+            "decision_status": "",
+            "decision_notes": "Approved by manager"
+        }
+        response = self.client.post('/api/approve_withdrawal', 
+                                    data=json.dumps(request_body), 
+                                    content_type='application/json')
+        
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.get_json(), {"error": f"Invalid decision status"})
+
+
 
 if __name__ == '__main__':
     unittest.main()
