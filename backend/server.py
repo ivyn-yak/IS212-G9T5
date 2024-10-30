@@ -42,7 +42,7 @@ def create_app():
                 # },
                 "task-auto-rej-every-night-midnight": {
                     "task": "app.task.auto_reject",
-                    "schedule": crontab(hour=16, minute=18),
+                    "schedule": crontab(hour=0, minute=0),
                 }
             },
         ),

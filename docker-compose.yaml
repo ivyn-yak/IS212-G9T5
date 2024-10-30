@@ -79,6 +79,7 @@ services:
       dockerfile: Dockerfile
     command: celery -A make_celery worker --loglevel=info
     environment:
+      - DATABASE_URL=${DATABASE_URL}
       - CELERY_BROKER_URL=${CELERY_BROKER_URL}
       - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND}
       - TZ=Asia/Singapore
@@ -92,6 +93,7 @@ services:
       dockerfile: Dockerfile
     command: celery -A make_celery beat --loglevel=info
     environment:
+      - DATABASE_URL=${DATABASE_URL}
       - CELERY_BROKER_URL=${CELERY_BROKER_URL}
       - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND}
       - TZ=Asia/Singapore
