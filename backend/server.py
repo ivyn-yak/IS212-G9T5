@@ -17,10 +17,7 @@ from app.utils import celery_init_app
 from app import task
 from celery.schedules import crontab
 
-# Load the environment variables from the .env file
-# If the .env file is in a different directory, adjust the path accordingly
-dotenv_path = os.path.join(os.path.dirname(__file__), 'util', '.env')
-load_dotenv(dotenv_path)
+load_dotenv()
 
 def create_app():
     app = Flask(__name__)
@@ -70,31 +67,6 @@ def create_app():
     return app
 
 app = create_app()
-# =======
-# # Access the environment variables
-# DATABASE_URL = os.getenv("DATABASE_URL")
-
-# # For debugging, you can print to verify the variable is loaded correctly
-# print(f"Loaded DATABASE_URL: {DATABASE_URL}")
-
-# # Configure the Flask app with the database URI
-# app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
-# app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-# # Initialize the database
-# db.init_app(app)
-
-# # Enable CORS
-# CORS(app, origins=["http://localhost:5173"], supports_credentials=True)
-
-# # Register the blueprints
-# app.register_blueprint(config)
-# app.register_blueprint(employee)
-# app.register_blueprint(dates)
-# app.register_blueprint(apply)
-# app.register_blueprint(approve)
-# app.register_blueprint(requests)
-# >>>>>>> Stashed changes
 
 # Run the app
 if __name__ == "__main__":
