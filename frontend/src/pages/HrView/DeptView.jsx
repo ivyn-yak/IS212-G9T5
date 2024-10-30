@@ -1,114 +1,131 @@
-import React, { useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { Box, Button, Drawer, Typography, IconButton } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import dayjs from 'dayjs';
-
-const mockEmployeeData = [
-  { staff_id: 101, name: 'Alice Smith', dept: 'Sales', manager_id: 101 },
-  { staff_id: 102, name: 'Bob Johnson', dept: 'Engineering', manager_id: 102 },
-  { staff_id: 103, name: 'Charlie Brown', dept: 'Sales', manager_id: 101 },
-  { staff_id: 104, name: 'David Lee', dept: 'Engineering', manager_id: 101 },
-  // More employees...
-];
-
-const mockWFHScheduleData = [
-  { staff_id: 101, specific_date: '2024-10-14', is_am: true, is_pm: false },
-  { staff_id: 102, specific_date: '2024-10-14', is_am: false, is_pm: true },
-  // More schedule entries...
-];
-
-// Helper function to get staff name by ID
-const getStaffName = (staffID) => {
-  const staff = mockEmployeeData.find(person => person.staff_id === staffID);
-  return staff ? staff.name : 'Unknown';
-};
-
-// Helper function to get employees by team (manager_id)
-const getTeamMembers = (managerID) => {
-  return mockEmployeeData.filter(employee => employee.manager_id === managerID);
-};
+import React, { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
+import { Button, Typography, Box, Card, List, ListItem, ListItemText } from '@mui/material';
 
 const DeptView = () => {
   const location = useLocation();
-  const navigate = useNavigate();
-  const { department, date } = location.state || {}; // Retrieve department and date from passed state
+  const { department, date } = location.state;
+  const [view, setView] = useState('dept'); // 'dept' for department view, 'team' for team view
   const [selectedTeam, setSelectedTeam] = useState(null);
+  const [teams, setTeams] = useState([]);
+  const [teamMembers, setTeamMembers] = useState([]);
+  const [availableEmployees, setAvailableEmployees] = useState([]);
 
-  // Filter employees by department
-  const departmentTeams = [...new Set(mockEmployeeData
-    .filter(emp => emp.dept === department)
-    .map(emp => emp.manager_id))];
+  // Fetch all employees and set up teams within the department
+  const fetchEmployeeData = async () => {
+    try {
+      const response = await fetch('http://localhost:5001/api/all', { credentials: 'include' });
+      if (!response.ok) {
+        throw new Error('Failed to fetch employee data');
+      }
 
-  const handleTeamClick = (manager_id) => {
-    const teamMembers = getTeamMembers(manager_id);
-    setSelectedTeam(teamMembers);
+      const employeeData = await response.json();
+      setAvailableEmployees(employeeData);
+
+      // Filter managers by department and set up teams
+      const deptManagers = employeeData
+        .filter(employee => employee.role === 3 && employee.dept.toLowerCase() === department.toLowerCase())
+        .map(manager => ({
+          teamName: `Team of ${manager.staff_fname} ${manager.staff_lname}`,
+          managerId: manager.staff_id,
+          members: employeeData.filter(emp => emp.reporting_manager === manager.staff_id)
+        }));
+
+      setTeams(deptManagers);
+    } catch (error) {
+      console.error('Error fetching employee data:', error);
+    }
   };
 
-  const handleClose = () => {
+  useEffect(() => {
+    if (view === 'dept') {
+      fetchEmployeeData();
+    }
+  }, [view, department]);
+
+  // Fetch team members for the selected team and date
+  useEffect(() => {
+    if (view === 'team' && selectedTeam) {
+      const fetchTeamSchedule = async () => {
+        try {
+          const response = await fetch(`http://localhost:5001/api/manager/${selectedTeam.managerId}/team_schedule?start_date=${date}&end_date=${date}`);
+          const data = await response.json();
+
+          if (data.team) {
+            setTeamMembers(data.team.map(member => ({
+              staffId: member.staff_id,
+              inOffice: member.ScheduleDetails.length === 0 // Assume in-office if no WFH schedule details for that date
+            })));
+          }
+        } catch (error) {
+          console.error('Error fetching team schedule:', error);
+        }
+      };
+
+      fetchTeamSchedule();
+    }
+  }, [view, selectedTeam, date]);
+
+  // Handler to view a specific team
+  const handleTeamClick = (team) => {
+    setSelectedTeam(team);
+    setView('team');
+  };
+
+  // Handler to go back to department view
+  const handleBackClick = () => {
+    setView('dept');
     setSelectedTeam(null);
   };
 
-  // Check if date is a valid object, if not fallback to current date
-  const displayDate = date ? dayjs(date) : dayjs();
-
   return (
-    <Box p={2}>
-      <Box display="flex" alignItems="center" mb={2}>
-        <IconButton onClick={() => navigate('/hr/hr-calendar')} style={{ marginRight: '16px' }}>
-          <ArrowBackIcon />
-        </IconButton>
-        <Typography variant="h4">
-          {department} - {displayDate.format('MMM D, YYYY')}
-        </Typography>
-      </Box>
-
-      {/* Display Teams in the Department */}
-      {departmentTeams.length ? (
-        <Box display="flex" flexWrap="wrap" gap={2}>
-          {departmentTeams.map((managerID, index) => (
-            <Button
-              key={index}
-              variant="outlined"
-              onClick={() => handleTeamClick(managerID)}
-              style={{ width: '150px', height: '100px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}
-            >
-              <Typography variant="h6">{`Team managed by ${getStaffName(managerID)}`}</Typography>
-              <Typography>Members: {getTeamMembers(managerID).length}</Typography>
-            </Button>
-          ))}
-        </Box>
+    <div>
+      {view === 'dept' ? (
+        // Department View: Show list of teams in the department
+        <div>
+          <Typography variant="h4" gutterBottom>{`Department: ${department}`}</Typography>
+          <Typography variant="h6">{`Date: ${date}`}</Typography>
+          <Box mt={3}>
+            {teams.map((team) => (
+              <Card key={team.managerId} style={{ marginBottom: '16px', padding: '16px' }}>
+                <Typography variant="h6">{team.teamName}</Typography>
+                <Button variant="outlined" onClick={() => handleTeamClick(team)}>
+                  View Team
+                </Button>
+              </Card>
+            ))}
+          </Box>
+        </div>
       ) : (
-        <Typography>No teams available for the selected department.</Typography>
-      )}
-
-      {/* Drawer to Show Team Members Working from Office/Home */}
-      <Drawer anchor="right" open={Boolean(selectedTeam)} onClose={handleClose}>
-        <Box p={2} width={250}>
-          {selectedTeam && (
-            <>
-              <Typography variant="h6">Team Members</Typography>
-              {selectedTeam.map((staffMember, index) => (
-                <Box key={index} mb={2}>
-                  <Typography variant="subtitle1">{getStaffName(staffMember.staff_id)}</Typography>
-                  {mockWFHScheduleData
-                    .filter(schedule => schedule.staff_id === staffMember.staff_id)
-                    .map((schedule, i) => (
-                      <Typography key={i} variant="body2">
-                        {`Date: ${dayjs(schedule.specific_date).format('MMM D, YYYY')} - AM: ${schedule.is_am ? 'In Office' : 'Remote'}, PM: ${schedule.is_pm ? 'In Office' : 'Remote'}`}
-                      </Typography>
-                  ))}
-                </Box>
+        // Team View: Show team members' attendance
+        <div>
+          <Button variant="contained" color="primary" onClick={handleBackClick}>
+            Back to Department View
+          </Button>
+          <Typography variant="h4" gutterBottom>{`Team: ${selectedTeam.teamName}`}</Typography>
+          <Typography variant="h6">{`Date: ${date}`}</Typography>
+          <Box mt={3}>
+            <List>
+              {teamMembers.map((member, index) => (
+                <ListItem key={index}>
+                  <ListItemText
+                    primary={`Staff ID: ${member.staffId}`}
+                    secondary={member.inOffice ? 'In Office' : 'Working From Home'}
+                  />
+                </ListItem>
               ))}
-            </>
-          )}
-        </Box>
-      </Drawer>
-    </Box>
+            </List>
+          </Box>
+        </div>
+      )}
+    </div>
   );
 };
 
 export default DeptView;
+
+
+
 
 
 
