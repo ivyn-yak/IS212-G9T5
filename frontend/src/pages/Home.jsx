@@ -28,11 +28,7 @@ function Home() {
             <td><a href="/140894">140894</a></td>
           </tr>
           <tr>
-            <td>HR</td>
-            <td><a href="/" aria-disabled></a>130002</td>
-          </tr>
-          <tr>
-            <td>Senior Manager/Director</td>
+            <td>Senior Manager/Director/HR</td>
             <td><a href="/140001">140001</a></td>
           </tr>
         </tbody>
