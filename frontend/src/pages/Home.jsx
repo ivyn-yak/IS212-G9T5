@@ -29,7 +29,7 @@ function Home() {
           </tr>
           <tr>
             <td>HR</td>
-            <td><a href="/" aria-disabled></a>No IDs yet</td>
+            <td><a href="/" aria-disabled></a>130002</td>
           </tr>
           <tr>
             <td>Senior Manager/Director</td>

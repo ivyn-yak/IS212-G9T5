@@ -82,13 +82,23 @@ const WFHRequestForm = () => {
 
     try {
       // Submit the WFH request to the WFHRequests table
+      // const response = await fetch('/api/apply', {
+      //   method: 'POST',
+      //   headers: {
+      //     'Content-Type': 'application/json',
+      //   },
+      //   body: JSON.stringify(finalPayload),
+      // });
+
       const response = await fetch('http://localhost:5001/api/apply', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(finalPayload),
+        credentials: 'include',
       });
+
 
       const result = await response.json();
       if (response.ok) {
