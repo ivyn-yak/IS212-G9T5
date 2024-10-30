@@ -25,12 +25,9 @@ CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND")
 def create_app():
     app = Flask(__name__)
 
-    if __name__ == '__main__':
-        DATABASE_URL = os.getenv("DATABASE_URL")
-        app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
-        app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    else:
-        app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite://"
+    DATABASE_URL = os.getenv("DATABASE_URL")
+    app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     app.config.from_mapping(
         CELERY=dict(
@@ -45,7 +42,7 @@ def create_app():
                 # },
                 "task-auto-rej-every-night-midnight": {
                     "task": "app.task.auto_reject",
-                    "schedule": crontab(hour=0, minute=0),
+                    "schedule": crontab(hour=16, minute=18),
                 }
             },
         ),
