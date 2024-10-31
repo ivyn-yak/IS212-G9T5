@@ -124,7 +124,7 @@ function AppContent() {
                     <ManageerViewTeamSchedule staffId={staffId} />
                   </ProtectedRoute>
                 } />
-                <Route path="approval/:approval_staff_id" element={
+                <Route path="approval/:approval_req_id" element={
                   <ProtectedRoute allowedRoles={[ROLES.MANAGER]} staffRole={staffRole}>
                     <ApprovalScreen />
                   </ProtectedRoute>

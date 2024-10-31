@@ -1,142 +1,185 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { 
-  Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Box, Card, Typography, IconButton, Button
+  Table, TableBody, TableCell, TableContainer, TableHead, TableFooter, TableRow, 
+  Paper, Box, Card, Typography, IconButton, Button, Menu, MenuItem, Checkbox, FormControlLabel,
+  Skeleton
 } from '@mui/material';
+import FilterListIcon from '@mui/icons-material/FilterList';
 import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-
 import dayjs from 'dayjs';
-import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
-import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
-dayjs.extend(isSameOrAfter);
-dayjs.extend(isSameOrBefore);
+import '../../components/WeeklyCalendar/WeeklyCalendar.css';
 
-
-// Define AttendanceCell component within the same file
-const AttendanceCell = ({ date, department, managerIds }) => {
-  const [attendance, setAttendance] = useState(null);
-
-  useEffect(() => {
-    const fetchAttendance = async () => {
-      let inOfficeCount = 0;
-      let totalCount = 0;
-
-      for (const managerId of managerIds) {
-        try {
-          const response = await fetch(`http://localhost:5001/api/manager/${managerId}/team_schedule?start_date=${date}&end_date=${date}`);
-          const data = await response.json();
-
-          if (data.team) {
-            const inOffice = data.team.reduce((count, member) => {
-              const isWFH = member.ScheduleDetails.some(detail => detail.specific_date === date);
-              return !isWFH ? count + 1 : count;
-            }, 0);
-
-            inOfficeCount += inOffice;
-            totalCount += data.team.length;
-          }
-        } catch (error) {
-          console.error(`Error fetching attendance for manager ${managerId} on ${date}:`, error);
-        }
-      }
-
-      setAttendance({ inOffice: inOfficeCount, total: totalCount });
-      console.log(attendance);
-    };
-
-    fetchAttendance();
-  }, [date, managerIds]);
-
-  return (
-    <Card className="schedule-card">
-      <Box p={1}>
-        {attendance ? (
-          <Typography variant="body2">
-            {department}: {attendance.inOffice} / {attendance.total}
-          </Typography>
-        ) : (
-          <Typography variant="body2">Loading...</Typography>
-        )}
-      </Box>
-    </Card>
-  );
-};
-
-// Main HrCalendar component
 const HrCalendar = () => {
   const [currentDate, setCurrentDate] = useState(dayjs());
-  const [availableEmployees, setAvailableEmployees] = useState([]);
-  const [managers, setManagers] = useState([]);
+  const [departmentManagers, setDepartmentManagers] = useState({});
+  const [scheduleData, setScheduleData] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const { staffId } = useParams();
 
-  const { staffId } = useParams(); // Get staffId and role from URL parameters
-  console.log(staffId);
-  // console.log(role)
-
-  const handleDepartmentClick = (department, date) => {
-    navigate(`/${staffId}/1/dept-view`, { state: { department, date } }); // Use absolute path
-  };
+  const [selectedDepartments, setSelectedDepartments] = useState([]);
+  const [filterAnchorEl, setFilterAnchorEl] = useState(null);
 
   const shifts = [
     { name: 'AM', time: '9:00 - 13:00' },
     { name: 'PM', time: '14:00 - 18:00' }
   ];
 
-  const weekDates = Array.from({ length: 7 }, (_, i) => currentDate.startOf('week').add(i, 'day').format('YYYY-MM-DD'));
+  const weekDates = useMemo(() => 
+    Array.from({ length: 7 }, (_, i) => 
+      currentDate.startOf('week').add(i, 'day').format('YYYY-MM-DD')
+    ), [currentDate]);
 
-  // Fetch employee data and managers with their team sizes
+  // Fetch managers once when component mounts
   useEffect(() => {
-    const fetchEmployeeData = async () => {
+    const fetchManagers = async () => {
+      setLoading(true);
       try {
-        const response = await fetch('http://localhost:5001/api/all', { credentials: 'include' });
-        if (!response.ok) {
-          throw new Error('Failed to fetch employee data');
-        }
-        
-        const employeeData = await response.json();
-        setAvailableEmployees(employeeData);
-  
-        const managerList = employeeData
-          .filter(employee => employee.role === 3)
-          .reduce((acc, manager) => {
-            const department = manager.dept.toLowerCase();
-            const teamSize = employeeData.filter(emp => emp.reporting_manager === manager.staff_id).length;
-  
-            if (!acc[department]) {
-              acc[department] = [];
-            }
-  
-            acc[department].push({ 
-              staffId: manager.staff_id, 
-              teamSize 
-            });
-            
-            return acc;
-          }, {});
-  
-        setManagers(managerList);
+        const response = await fetch('/api/managers');
+        const data = await response.json();
+        setDepartmentManagers(data);
+        setError(null);
       } catch (error) {
-        console.error('Error fetching employee data:', error);
+        console.error('Error fetching managers:', error);
+        setError(error.message);
       }
     };
-  
-    fetchEmployeeData();
+
+    fetchManagers();
   }, []);
 
-  const handlePrevWeek = () => {
-    setCurrentDate(currentDate.subtract(1, 'week'));
+  // Fetch schedules when week changes
+  useEffect(() => {
+    const fetchSchedules = async () => {
+      setLoading(true);
+      setScheduleData({}); // Clear existing schedule data
+      
+      try {
+        const startDate = currentDate.startOf('week').format('YYYY-MM-DD');
+        const endDate = currentDate.endOf('week').format('YYYY-MM-DD');
+        
+        // Fetch schedules for all managers in parallel
+        const schedulePromises = Object.values(departmentManagers).flat().map(manager =>
+          fetch(`/api/manager/${manager.staff_id}/team_schedule?start_date=${startDate}&end_date=${endDate}`)
+            .then(res => res.json())
+            .then(data => ({ [manager.staff_id]: data }))
+        );
+
+        const scheduleResults = await Promise.all(schedulePromises);
+        const combinedSchedules = scheduleResults.reduce((acc, curr) => ({...acc, ...curr}), {});
+        
+        setScheduleData(combinedSchedules);
+        setError(null);
+      } catch (error) {
+        console.error('Error fetching schedules:', error);
+        setError(error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (Object.keys(departmentManagers).length > 0) {
+      fetchSchedules();
+    }
+  }, [currentDate, departmentManagers]);
+
+  const handleDepartmentClick = (department, date) => {
+    console.log('Date being passed:', date);
+    const dateStr = typeof date === 'string' ? date : dayjs(date).format('YYYY-MM-DD');
+    console.log('Formatted date:', dateStr);
+    navigate(`/${staffId}/1/dept-view`, { 
+      state: { 
+        department, 
+        date: dateStr
+      } 
+    });
   };
 
-  const handleNextWeek = () => {
-    setCurrentDate(currentDate.add(1, 'week'));
+  const AttendanceCell = React.memo(({ date, department }) => {
+    const isDataReady = useMemo(() => {
+      const managers = departmentManagers[department] || [];
+      return managers.every(manager => 
+        scheduleData[manager.staff_id]?.team !== undefined
+      );
+    }, [date, department, departmentManagers, scheduleData]);
+
+    const calculateAttendance = useMemo(() => {
+      if (!isDataReady) return null;
+
+      const managers = departmentManagers[department] || [];
+      let inOfficeCount = 0;
+      let totalCount = 0;
+
+      managers.forEach(manager => {
+        const teamData = scheduleData[manager.staff_id]?.team || [];
+        totalCount += manager.teamSize;
+        
+        teamData.forEach(member => {
+          const hasWfhOnDate = member.ScheduleDetails.some(schedule => 
+            schedule.specific_date === date
+          );
+          if (!hasWfhOnDate) {
+            inOfficeCount++;
+          }
+        });
+      });
+
+      return { inOffice: inOfficeCount, total: totalCount };
+    }, [date, department, departmentManagers, scheduleData, isDataReady]);
+
+    return (
+      <Card className="schedule-card">
+        <Box p={1}>
+          {!isDataReady ? (
+            <Skeleton width="100%" height={24} animation="wave" />
+          ) : (
+            <Typography variant="body2">
+              {department}: {calculateAttendance.inOffice} / {calculateAttendance.total}
+            </Typography>
+          )}
+        </Box>
+      </Card>
+    );
+  });
+
+  const handleFilterClick = (event) => {
+    setFilterAnchorEl(event.currentTarget);
   };
 
-  const handleDateChange = (newDate) => {
-    setCurrentDate(dayjs(newDate));
+  const handleFilterClose = () => {
+    setFilterAnchorEl(null);
   };
+
+  const handleDepartmentToggle = (department) => {
+    setSelectedDepartments(prev => {
+      if (prev.includes(department)) {
+        return prev.filter(d => d !== department);
+      } else {
+        return [...prev, department];
+      }
+    });
+  };
+
+  if (loading && Object.keys(departmentManagers).length === 0) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
+        <Typography>Loading calendar data...</Typography>
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
+        <Typography color="error">Error: {error}</Typography>
+      </Box>
+    );
+  }
 
   return (
     <div className="weekly-schedule-container">
@@ -146,8 +189,8 @@ const HrCalendar = () => {
             <TableRow>
               <TableCell>Shift</TableCell>
               {weekDates.map((date) => (
-                <TableCell key={date}>
-                  {date}
+                <TableCell key={dayjs(date).format('YYYY-MM-DD')}>
+                  {dayjs(date).format('ddd, MMM D')}
                 </TableCell>
               ))}
             </TableRow>
@@ -156,51 +199,99 @@ const HrCalendar = () => {
             {shifts.map(shift => (
               <TableRow key={shift.name}>
                 <TableCell className="shift-cell">
-                  {shift.name}
-                  <br />
-                  ({shift.time})
+                  {shift.name}<br />({shift.time})
                 </TableCell>
                 {weekDates.map((date) => (
-                  <TableCell key={`${date}-${shift.name}`}>
-                    {Object.entries(managers).map(([department, managersList]) => (
-                      <Button
-                        key={`${date}-${department}`}
-                        variant="outlined"
-                        fullWidth
-                        onClick={() => handleDepartmentClick(department, date)}
-                        style={{ textAlign: 'left', textTransform: 'none', display: 'block' }}
-                      >
-                        <AttendanceCell
-                          date={date}
-                          department={department}
-                          managerIds={managersList.map(manager => manager.staffId)}
-                        />
-                      </Button>
+                  <TableCell key={`${dayjs(date).format('YYYY-MM-DD')}-${shift.name}`}>
+                    {departmentManagers && 
+                      Object.keys(departmentManagers)
+                        .filter(department => selectedDepartments.length === 0 || selectedDepartments.includes(department))
+                        .map(department => (
+                          <Button
+                            key={`${dayjs(date).format('YYYY-MM-DD')}-${department}`}
+                            variant="outlined"
+                            fullWidth
+                            onClick={() => handleDepartmentClick(department, date)} // date should be a string here
+                            style={{ textAlign: 'left', textTransform: 'none', display: 'block', marginBottom: '8px' }}
+                          >
+                            <AttendanceCell
+                              date={date} // This should already be a string from weekDates
+                              department={department}
+                            />
+                          </Button>
                     ))}
                   </TableCell>
                 ))}
               </TableRow>
             ))}
           </TableBody>
+          <TableFooter>
+            <TableRow>
+              <TableCell colSpan={8}>
+                <div className="footer-content">
+                  <IconButton 
+                    onClick={handleFilterClick}
+                    size="small"
+                    sx={{ mr: 1 }}
+                  >
+                    <FilterListIcon />
+                  </IconButton>
+                  <Menu
+                    anchorEl={filterAnchorEl}
+                    open={Boolean(filterAnchorEl)}
+                    onClose={handleFilterClose}
+                  >
+                    <MenuItem>
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={selectedDepartments.length === 0}
+                            onChange={() => setSelectedDepartments([])}
+                          />
+                        }
+                        label="Show All"
+                      />
+                    </MenuItem>
+                    {departmentManagers && Object.keys(departmentManagers).map(department => (
+                      <MenuItem key={department}>
+                        <FormControlLabel
+                          control={
+                            <Checkbox
+                              checked={selectedDepartments.includes(department)}
+                              onChange={() => handleDepartmentToggle(department)}
+                            />
+                          }
+                          label={department.charAt(0).toUpperCase() + department.slice(1)}
+                        />
+                      </MenuItem>
+                    ))}
+                  </Menu>
+                  <Button 
+                    variant="outlined" 
+                    onClick={() => setCurrentDate(dayjs())}
+                    sx={{ mx: 1 }}
+                  >
+                    Today
+                  </Button>
+                  <LocalizationProvider dateAdapter={AdapterDayjs}>
+                    <DatePicker
+                      label={currentDate.format('MMMM YYYY')}
+                      value={currentDate}
+                      onChange={(newDate) => setCurrentDate(dayjs(newDate))}
+                    />
+                  </LocalizationProvider>
+                  <IconButton onClick={() => setCurrentDate(prev => prev.subtract(1, 'week'))} sx={{ ml: 1 }}>
+                    <ArrowBackIcon />
+                  </IconButton>
+                  <IconButton onClick={() => setCurrentDate(prev => prev.add(1, 'week'))}>
+                    <ArrowForwardIcon />
+                  </IconButton>
+                </div>
+              </TableCell>
+            </TableRow>
+          </TableFooter>
         </Table>
       </TableContainer>
-
-      <div className="footer-content">
-        <Button variant="outlined" onClick={() => setCurrentDate(dayjs())}>Today</Button>
-        <LocalizationProvider dateAdapter={AdapterDayjs}>
-          <DatePicker
-            label={currentDate.format('MMMM YYYY')}
-            value={currentDate}
-            onChange={(newDate) => setCurrentDate(dayjs(newDate))}
-          />
-        </LocalizationProvider>
-        <IconButton onClick={handlePrevWeek}>
-          <ArrowBackIcon />
-        </IconButton>
-        <IconButton onClick={handleNextWeek}>
-          <ArrowForwardIcon />
-        </IconButton>
-      </div>
     </div>
   );
 };
