@@ -1,31 +1,30 @@
 import React, { useState, useEffect } from 'react'; 
 import { Link, useParams } from 'react-router-dom';  
 
-const PendingRequests = ({ staffId }) => {   
+const PendingRequests = () => {   
+  const { staffId } = useParams(); // Assumes managerId is part of the URL
+  console.log(staffId);
   const [requests, setRequests] = useState([]);   
   const [loading, setLoading] = useState(true);   
   const [error, setError] = useState(null);   
 
-  const fetchAllRequests = async (staffIds) => {     
+  const fetchAllRequests = async () => {     
     try {       
-      const allRequests = [];       
+      const manager_id = staffId;
+      const response = await fetch(`/api/team-manager/${manager_id}/pending-requests`);
       
-      const mockData = {         
-        1: [           
-          { date_id: 1, request_id: 101, staff_id: 1, specific_date: '2024-10-01', is_am: true, is_pm: false },           
-          { date_id: 2, request_id: 101, staff_id: 1, specific_date: '2024-10-02', is_am: true, is_pm: true },         
-        ],         
-        2: [           
-          { date_id: 3, request_id: 103, staff_id: 2, specific_date: '2024-10-01', is_am: false, is_pm: true },           
-          { date_id: 4, request_id: 104, staff_id: 2, specific_date: '2024-10-03', is_am: true, is_pm: true },         
-        ],       
-      };       
+      if (!response.ok) {
+        throw new Error('Failed to fetch pending requests');
+      }
       
-      for (const staffId of staffIds) {         
-        const data = mockData[staffId] || [];         
-        allRequests.push(...data);       
-      }       
-      
+      const data = await response.json();
+      const allRequests = data.team_pending_requests.flatMap(member => 
+        member.pending_requests.map(request => ({
+          ...request,
+          dates: [request.specific_date] // Group requests by request_id later
+        }))
+      );
+
       setRequests(allRequests);       
       setLoading(false);     
     } catch (err) {       
@@ -51,9 +50,8 @@ const PendingRequests = ({ staffId }) => {
   };    
 
   useEffect(() => {     
-    const staffIds = [1, 2];     
-    fetchAllRequests(staffIds);   
-  }, []);    
+    fetchAllRequests();   
+  }, [staffId]);    
 
   if (loading) {     
     return <div>Loading pending requests...</div>;   
@@ -68,32 +66,36 @@ const PendingRequests = ({ staffId }) => {
   return (     
     <div className="pending-requests-container" style={{ padding: '20px' }}>       
       <h2>Attendance</h2>       
-      <h3>Pending / Pending Requests</h3>       
+      <h3>Pending Requests</h3>       
+      
+      {/* Combined Table for Request ID, Specific Dates, and Action */}
       <table className="pending-requests-table" style={{ width: '100%', borderCollapse: 'collapse' }}>         
         <thead>           
           <tr>             
-            <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid #ddd' }}>Request ID</th>             
-            <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid #ddd' }}>Specific Date(s)</th>             
-            <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid #ddd' }}>Action</th>           
+            <th style={{ padding: '10px', textAlign: 'left', borderBottom: '2px solid #e5e5e5', backgroundColor: '#f9f9f9' }}>Request ID</th>             
+            <th style={{ padding: '10px', textAlign: 'left', borderBottom: '2px solid #e5e5e5', backgroundColor: '#f9f9f9' }}>Specific Date(s)</th>             
+            <th style={{ padding: '10px', textAlign: 'left', borderBottom: '2px solid #e5e5e5', backgroundColor: '#f9f9f9' }}>Action</th>           
           </tr>         
         </thead>         
         <tbody>           
           {groupedRequests.map((request) => (             
             <tr key={request.request_id}>               
-              <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>{request.request_id}</td>               
-              <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>                 
+              <td style={{ padding: '10px', borderBottom: '1px solid #e5e5e5' }}>{request.request_id}</td>               
+              <td style={{ padding: '10px', borderBottom: '1px solid #e5e5e5' }}>                 
                 {request.dates.map((date, index) => (                   
-                  <span key={index}>                     
-                    {date}                     
-                    {index !== request.dates.length - 1 && <br />}                   
-                  </span>                 
+                  <div key={index} style={{ lineHeight: '1.6' }}>                     
+                    {date}                   
+                  </div>                 
                 ))}               
               </td>               
-              <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>                 
-                <Link to={`/${staffId}/3/approval/${request.staff_id}`}>                   
+              <td style={{ padding: '10px', borderBottom: '1px solid #e5e5e5' }}>                 
+                <Link 
+                  to={`/${staffId}/3/approval/${request.request_id}`}  // Adjusted to match the route
+                  style={{ color: '#007bff', textDecoration: 'none' }}
+                >                   
                   View                 
                 </Link>               
-              </td>             
+              </td>  
             </tr>           
           ))}         
         </tbody>       

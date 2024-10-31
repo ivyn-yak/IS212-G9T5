@@ -153,7 +153,7 @@ def manager_approve_recurring():
                     and_(
                         WFHRequests.staff_id.in_([emp.staff_id for emp in employees_under_same_manager]),
                         WFHRequests.specific_date == arrangement_date,
-                        WFHRequests.request_status.in_(['Approved', 'Pending Withdraw']),
+                        WFHRequests.request_status.in_(['Approved', 'Pending_Withdraw']),
                         WFHRequests.is_am == True  # Check for AM session
                     )
                 ).count()
@@ -171,7 +171,7 @@ def manager_approve_recurring():
                     and_(
                         WFHRequests.staff_id.in_([emp.staff_id for emp in employees_under_same_manager]),
                         WFHRequests.specific_date == arrangement_date,
-                        WFHRequests.request_status.in_(['Approved', 'Pending Withdraw']),
+                        WFHRequests.request_status.in_(['Approved', 'Pending_Withdraw']),
                         WFHRequests.is_pm == True  # Check for PM session
                     )
                 ).count()
