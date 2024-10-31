@@ -11,12 +11,18 @@ export default defineConfig({
     }),
   ],
   server: {
+    port: 3000,
     proxy: {
       '/api': {
-        target: 'http://localhost:5001',  // Forward to the Flask backend
-        changeOrigin: true,               // Change the origin of the host header to the target URL
-        // No rewrite, keep the /api prefix in the request
-      },
+        target: 'http://localhost:5001',
+        changeOrigin: true,
+        secure: false,
+      }
+    }
+  },
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
     },
   },
 })
