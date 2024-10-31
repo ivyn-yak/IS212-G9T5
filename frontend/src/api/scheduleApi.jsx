@@ -1,7 +1,11 @@
+import config from '../config/config';
+
+const BASE_URL = config.ENDPOINT_BE_URL;
+
 export const fetchManagerSchedule = async (managerId, startDate, endDate) => {
     try {
       // First fetch team members
-      const teamResponse = await fetch(`http://localhost:5001/api/team/${managerId}`);
+      const teamResponse = await fetch(`${BASE_URL}/api/team/${managerId}`);
       if (!teamResponse.ok) {
         throw new Error(`Error fetching team data: ${teamResponse.status}`);
       }
@@ -15,7 +19,7 @@ export const fetchManagerSchedule = async (managerId, startDate, endDate) => {
   
       // Then fetch WFH schedule
       const scheduleResponse = await fetch(
-        `http://localhost:5001/api/manager/${managerId}/team_schedule?start_date=${startDate}&end_date=${endDate}`
+        `${BASE_URL}/api/manager/${managerId}/team_schedule?start_date=${startDate}&end_date=${endDate}`
       );
       
       let scheduleData = {};
@@ -76,7 +80,7 @@ export const fetchManagerSchedule = async (managerId, startDate, endDate) => {
   export const fetchStaffSchedule = async (staffId, startDate, endDate) => {
     try {
       // First fetch team members
-      const teamResponse = await fetch(`http://localhost:5001/api/team/${staffId}`);
+      const teamResponse = await fetch(`${BASE_URL}/api/team/${staffId}`);
       if (!teamResponse.ok) {
         throw new Error(`Error fetching team data: ${teamResponse.status}`);
       }
@@ -90,7 +94,7 @@ export const fetchManagerSchedule = async (managerId, startDate, endDate) => {
   
       // Fetch staff's own WFH schedule
       const staffResponse = await fetch(
-        `http://localhost:5001/api/staff/${staffId}/wfh_requests?start_date=${startDate}&end_date=${endDate}`
+        `${BASE_URL}/api/staff/${staffId}/wfh_requests?start_date=${startDate}&end_date=${endDate}`
       );
       
       let staffSchedule = [];
@@ -109,7 +113,7 @@ export const fetchManagerSchedule = async (managerId, startDate, endDate) => {
   
       // Fetch team schedule
       const teamScheduleResponse = await fetch(
-        `http://localhost:5001/api/team/${staffId}/schedule?start_date=${startDate}&end_date=${endDate}`
+        `${BASE_URL}/api/team/${staffId}/schedule?start_date=${startDate}&end_date=${endDate}`
       );
   
       let teamScheduleData = [];
