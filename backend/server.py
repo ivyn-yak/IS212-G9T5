@@ -19,16 +19,22 @@ from celery.schedules import crontab
 
 load_dotenv()
 
-CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL")
-CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND")
-
 def create_app():
     app = Flask(__name__)
 
-    DATABASE_URL = os.getenv("DATABASE_URL")
-    app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    if os.getenv("TESTING") == "True":
+        # Use SQLite for testing
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite://'
+        CELERY_BROKER_URL = "redis://localhost:6379"
+        CELERY_RESULT_BACKEND = "redis://localhost:6379"
+        
+    else:
+        # Use PostgreSQL for production
+        app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("DATABASE_URL")
+        CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL")
+        CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND")
 
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config.from_mapping(
         CELERY=dict(
             broker_url=CELERY_BROKER_URL,
