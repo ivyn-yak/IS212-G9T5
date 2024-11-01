@@ -8,6 +8,7 @@ services:
     build:
       context: ./backend  
       dockerfile: Dockerfile
+    image: ivynyak/is212-g9t5-backend:latest
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - TESTING=False
@@ -33,6 +34,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+    image: ivynyak/is212-g9t5-test:latest
     environment:
       - DATABASE_URL=sqlite://
       - TESTING=True
@@ -79,6 +81,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+    image: ivynyak/is212-g9t5-celery-worker:latest
     command: celery -A make_celery worker --loglevel=info
     environment:
       - DATABASE_URL=${DATABASE_URL}
@@ -94,6 +97,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+    image: ivynyak/is212-g9t5-celery-beat:latest
     command: celery -A make_celery beat --loglevel=info
     environment:
       - DATABASE_URL=${DATABASE_URL}
