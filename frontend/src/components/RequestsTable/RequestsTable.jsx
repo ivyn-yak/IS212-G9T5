@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import { fetchWfhRequests, cancelWfhRequest } from '../../api/requests/requestsApi';
 import './RequestsTable.css';
 
 const RequestsTable = ({ staffId }) => {
@@ -10,7 +10,6 @@ const RequestsTable = ({ staffId }) => {
   const [cancelError, setCancelError] = useState(null);
   const [filters, setFilters] = useState({
     date: '',
-    type: '',
     status: '',
   });
 
@@ -21,17 +20,12 @@ const RequestsTable = ({ staffId }) => {
     return "Unknown";
   };
 
-  useEffect(() => {
-    fetchRequests();
-  }, [staffId]);
-
   const fetchRequests = async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await axios.get(`http://localhost:5001/api/staff/${staffId}/all_wfh_dates`);
-      // Add shift type to each request
-      const requestsWithShiftType = response.data.map(request => ({
+      const data = await fetchWfhRequests(staffId);
+      const requestsWithShiftType = data.map(request => ({
         ...request,
         shiftType: getShiftType(request.is_am, request.is_pm)
       }));
@@ -39,15 +33,15 @@ const RequestsTable = ({ staffId }) => {
       setFilteredRequests(requestsWithShiftType);
     } catch (error) {
       console.error('Error fetching requests:', error);
-      if (error.response && error.response.status === 404) {
-        setError('No WFH requests found for this staff member.');
-      } else {
-        setError('Failed to fetch requests. Please try again later.');
-      }
+      setError(error.message);
     } finally {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchRequests();
+  }, [staffId]);
 
   const handleFilter = () => {
     const filtered = requests.filter(request => {
@@ -59,55 +53,32 @@ const RequestsTable = ({ staffId }) => {
     setFilteredRequests(filtered);
   };
 
-  const handleCancel = async (request_id, specific_date, staff_id) => {
+  const handleCancel = async (request_id, specific_date) => {
     try {
       setCancelError(null);
+      await cancelWfhRequest(staffId, request_id, specific_date);
       
-      const formattedDate = new Date(specific_date).toISOString().split('T')[0];
-      
-      const response = await axios.put(
-        `http://localhost:5001/api/staff/${staff_id}/cancel_request/${request_id}/${formattedDate}`,
-        {},
-        {
-          headers: {
-            'Content-Type': 'application/json'
-          }
+      const updatedRequests = requests.map(request => {
+        if (request.request_id === request_id && request.specific_date === specific_date) {
+          return { ...request, request_status: 'Cancelled' };
         }
-      );
-
-      if (response.status === 200) {
-        const updatedRequests = requests.map(request => {
-          if (request.request_id === request_id && request.specific_date === specific_date) {
-            return { ...request, request_status: 'Cancelled' };
-          }
-          return request;
-        });
-        setRequests(updatedRequests);
-        setFilteredRequests(updatedRequests);
-        
-        alert('Request cancelled successfully');
-      }
+        return request;
+      });
+      setRequests(updatedRequests);
+      setFilteredRequests(updatedRequests);
+      
+      alert('Request cancelled successfully');
     } catch (error) {
       console.error('Error cancelling request:', error);
-      
-      if (error.response) {
-        const errorMessage = error.response.data.error || 'Failed to cancel request.';
-        setCancelError(errorMessage);
-        alert(errorMessage);
-      } else if (error.request) {
-        setCancelError('Network error. Please check your connection.');
-        alert('Network error. Please check your connection.');
-      } else {
-        setCancelError('An unexpected error occurred.');
-        alert('An unexpected error occurred.');
-      }
+      setCancelError(error.message);
+      alert(error.message);
     }
   };
 
-  const confirmCancel = (request_id, specific_date, staff_id) => {
+  const confirmCancel = (request_id, specific_date) => {
     const confirmed = window.confirm('Are you sure you want to cancel this request?');
     if (confirmed) {
-      handleCancel(request_id, specific_date, staff_id);
+      handleCancel(request_id, specific_date);
     }
   };
 
@@ -115,28 +86,32 @@ const RequestsTable = ({ staffId }) => {
     return <div>Loading...</div>;
   }
 
+  const FilterSection = () => (
+    <div className="filter-section">
+      <input
+        type="date"
+        value={filters.date}
+        onChange={(e) => setFilters({ ...filters, date: e.target.value })}
+      />
+      <select
+        value={filters.status}
+        onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+      >
+        <option value="">Select Status</option>
+        <option value="Approved">Approved</option>
+        <option value="Rejected">Rejected</option>
+        <option value="Withdrawal">Withdrawal</option>
+        <option value="Cancelled">Cancelled</option>
+        <option value="Pending">Pending</option>
+      </select>
+      <button onClick={handleFilter}>Filter</button>
+    </div>
+  );
+
   if (error === 'No WFH requests found for this staff member.') {
     return (
       <div className="request-table">
-        <div className="filter-section">
-          <input
-            type="date"
-            value={filters.date}
-            onChange={(e) => setFilters({ ...filters, date: e.target.value })}
-          />
-          <select
-            value={filters.status}
-            onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-          >
-            <option value="">Select Status</option>
-            <option value="Approved">Approved</option>
-            <option value="Rejected">Rejected</option>
-            <option value="Withdrawal">Withdrawal</option>
-            <option value="Cancelled">Cancelled</option>
-            <option value="Pending">Pending</option>
-          </select>
-          <button onClick={handleFilter}>Filter</button>
-        </div>
+        <FilterSection />
         <p className="no-requests-message">{error}</p>
       </div>
     );
@@ -148,25 +123,7 @@ const RequestsTable = ({ staffId }) => {
 
   return (
     <div className="request-table">
-      <div className="filter-section">
-        <input
-          type="date"
-          value={filters.date}
-          onChange={(e) => setFilters({ ...filters, date: e.target.value })}
-        />
-        <select
-          value={filters.status}
-          onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-        >
-          <option value="">Select Status</option>
-          <option value="Approved">Approved</option>
-          <option value="Rejected">Rejected</option>
-          <option value="Withdrawal">Withdrawal</option>
-          <option value="Cancelled">Cancelled</option>
-          <option value="Pending">Pending</option>
-        </select>
-        <button onClick={handleFilter}>Filter</button>
-      </div>
+      <FilterSection />
       
       {cancelError && (
         <div className="error-message" style={{ color: 'red', margin: '10px 0' }}>
@@ -195,7 +152,7 @@ const RequestsTable = ({ staffId }) => {
                 <td>
                   {request.request_status === 'Pending' ? (
                     <button 
-                      onClick={() => confirmCancel(request.request_id, request.specific_date, staffId)}
+                      onClick={() => confirmCancel(request.request_id, request.specific_date)}
                       className="cancel-button"
                     >
                       Cancel

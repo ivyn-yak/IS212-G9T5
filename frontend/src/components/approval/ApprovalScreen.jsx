@@ -2,31 +2,28 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 
 const ApprovalScreen = () => {
-  // Update parameter names to match the route parameter names
-  const { staffId, approval_staff_id } = useParams();  // staffId is the manager's ID, approval_staff_id is the ID of staff being approved
-  const [requests, setRequests] = useState([]);
+  
+  const { staffId, approval_req_id } = useParams();
+  const [request, setRequest] = useState(null);
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [allDates, setAllDates] = useState([]); // Store all dates for recurring requests
   const [loading, setLoading] = useState(true);
   const [decisionNotes, setDecisionNotes] = useState('');  
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-  // Simulated data for staff requests (mock data based on approval_staff_id)
-  const mockData = {
-    1: [
-      { date_id: 1, request_id: 101, staff_id: 1, specific_date: '2024-10-01', is_am: true, is_pm: false },
-      { date_id: 2, request_id: 101, staff_id: 1, specific_date: '2024-10-02', is_am: true, is_pm: true },
-    ],
-    2: [
-      { date_id: 3, request_id: 103, staff_id: 2, specific_date: '2024-10-01', is_am: false, is_pm: true },
-      { date_id: 4, request_id: 104, staff_id: 2, specific_date: '2024-10-03', is_am: true, is_pm: true },
-    ],
-  };
-
-  // Fetch the WFH requests for a specific staff member
-  const fetchStaffRequests = async (staffId) => {
+  const fetchRequestDetails = async () => {
     try {
-      const data = mockData[staffId] || []; // Use mock data for requests
-      setRequests(data);
+      const response = await fetch(`/api/request/${approval_req_id}`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch the request');
+      }
+
+      const data = await response.json();
+      setRequest(data.data);
+      setIsRecurring(data.is_recurring);
+      setAllDates(data.all_dates); // Set all dates for recurring requests
       setLoading(false);
     } catch (err) {
       setError(err.message);
@@ -35,9 +32,8 @@ const ApprovalScreen = () => {
   };
 
   useEffect(() => {
-    // Use approval_staff_id instead of staff_id
-    fetchStaffRequests(approval_staff_id);
-  }, [approval_staff_id]);
+    fetchRequestDetails();
+  }, [approval_req_id]);
 
   const formatDayType = (is_am, is_pm) => {
     if (is_am && is_pm) {
@@ -54,24 +50,35 @@ const ApprovalScreen = () => {
   const handleDecision = async (decisionStatus) => {
     try {
       const payload = {
-        request_id: requests[0]?.request_id,
-        manager_id: staffId, // This is the manager's ID
-        staff_id: approval_staff_id, // This is the staff member's ID
+        request_id: approval_req_id,
         decision_status: decisionStatus,
         decision_notes: decisionNotes,
+        manager_id: staffId
       };
 
-      console.log('Payload that will be sent:', payload);
+      const endpoint = isRecurring ? '/api/approve_recurring' : '/api/approve';
+
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to process the decision');
+      }
 
       alert(`Decision successfully made: ${decisionStatus}`);
       setError(null);
 
-      // Navigate back to pending requests using the correct route
-      navigate(`/${staffId}/3/pending-requests`);
-
+      navigate(`/3/pending-requests`);
     } catch (error) {
       console.error('Error submitting the decision:', error);
-      setError('An error occurred while submitting the decision.');
+      setError(error.message || 'An error occurred while submitting the decision.');
     }
   };
 
@@ -85,17 +92,23 @@ const ApprovalScreen = () => {
 
   return (
     <div style={{ padding: '20px' }}>
-      <h2>Approval Screen for Staff ID: {approval_staff_id}</h2>
-      <p>Reference Request ID: {requests[0]?.request_id}</p>
+      <h2>Approval Screen for Request ID: {approval_req_id}</h2>
       <div>
-        <h3>Requested Dates:</h3>
-        <ul>
-          {requests.map((req) => (
-            <li key={req.date_id}>
-              {req.specific_date} - {formatDayType(req.is_am, req.is_pm)}
-            </li>
-          ))}
-        </ul>
+        <p>Staff ID: {request.staff_id}</p>
+        {isRecurring ? (
+          <div>
+            <h3>Requested Dates:</h3>
+            <ul>
+              {allDates.map((date, index) => (
+                <li key={index}>
+                  {date.specific_date} - {formatDayType(date.is_am, date.is_pm)}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : (
+          <p>Date: {request.specific_date} - {formatDayType(request.is_am, request.is_pm)}</p>
+        )}
       </div>
       <div>
         <label>
@@ -110,13 +123,13 @@ const ApprovalScreen = () => {
       </div>
       <div>
         <button 
-          onClick={() => handleDecision('approved')} 
+          onClick={() => handleDecision('Approved')} 
           style={{ backgroundColor: 'green', color: 'white', marginRight: '10px' }}
         >
           Approve
         </button>
         <button 
-          onClick={() => handleDecision('rejected')} 
+          onClick={() => handleDecision('Rejected')} 
           style={{ backgroundColor: 'red', color: 'white' }}
         >
           Reject
@@ -128,3 +141,4 @@ const ApprovalScreen = () => {
 };
 
 export default ApprovalScreen;
+
