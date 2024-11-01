@@ -1,7 +1,7 @@
 name: Build and Deploy to Docker Hub and AWS ECS
 
 on:
-  push:
+  pull_request:
     branches:
       - main 
 
