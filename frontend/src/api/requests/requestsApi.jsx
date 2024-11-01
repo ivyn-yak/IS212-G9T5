@@ -6,6 +6,7 @@ const BASE_URL = config.ENDPOINT_BE_URL;
 export const fetchWfhRequests = async (staffId) => {
   try {
     const response = await axios.get(`${BASE_URL}/api/staff/${staffId}/all_wfh_dates`);
+    console.log("fetchRequests -> response", response)
     return response.data;
   } catch (error) {
     if (error.response?.status === 404) {

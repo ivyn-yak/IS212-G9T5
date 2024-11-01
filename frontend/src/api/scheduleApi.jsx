@@ -6,6 +6,7 @@ export const fetchManagerSchedule = async (managerId, startDate, endDate) => {
     try {
       // First fetch team members
       const teamResponse = await fetch(`${BASE_URL}/api/team/${managerId}`);
+      console.log(teamResponse);
       if (!teamResponse.ok) {
         throw new Error(`Error fetching team data: ${teamResponse.status}`);
       }
