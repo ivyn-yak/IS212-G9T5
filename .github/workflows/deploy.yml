@@ -1,4 +1,4 @@
-name: Build and Deploy to Docker Hub and AWS ECS
+name: Build and Deploy to Docker Hub and AWS EC2
 
 on:
   push:
@@ -24,13 +24,12 @@ jobs:
       - name: Build and Push Docker images to Docker Hub
         run: docker compose build && docker compose push
 
-      # - name: Configure AWS credentials
-      #   uses: aws-actions/configure-aws-credentials@v1
-      #   with:
-      #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      #     aws-region: us-west-2 
-
-      # - name: Deploy to AWS ECS
-      #   run: |
-      #     aws ecs update-service --cluster your-cluster-name --service your-service-name --force-new-deployment
+      - name: SSH into EC2 and Deploy with Docker Compose
+        env:
+          PRIVATE_KEY: ${{ secrets.EC2_KEY }}
+        run: |
+          echo "${PRIVATE_KEY}" > priv-key.pem
+          chmod 600 priv-key.pem
+          ssh -o StrictHostKeyChecking=no -i priv-key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+            docker-compose up -d --force-recreate
+          EOF
