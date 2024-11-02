@@ -1,54 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { getTeamPendingWithdrawals } from '../../api/requests/withdrawRequestsApi';
 
-const WithdrawalRequests = () => {
+const WithdrawRequests = () => {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { staffId } = useParams();
 
-  // Mock data for withdrawal requests
-  const mockWithdrawalRequests = {
-    1: [
-      { 
-        withdrawal_id: 1,
-        request_id: 101,
-        staff_id: 1,
-        schedule_date: '2024-10-01',
-        type: 'Full Day',
-        reason: 'Need to be in office for important meeting',
-        status: 'pending'
-      },
-      {
-        withdrawal_id: 2,
-        request_id: 102,
-        staff_id: 1,
-        schedule_date: '2024-10-15',
-        type: 'Morning',
-        reason: 'Department gathering',
-        status: 'pending'
-      }
-    ],
-    2: [
-      {
-        withdrawal_id: 3,
-        request_id: 103,
-        staff_id: 2,
-        schedule_date: '2024-10-05',
-        type: 'Afternoon',
-        reason: 'Team building activity',
-        status: 'pending'
-      }
-    ]
+  const getShiftType = (is_am, is_pm) => {
+    if (is_am && is_pm) return "Full Day";
+    if (is_am) return "AM Shift";
+    if (is_pm) return "PM Shift";
+    return "Unknown";
   };
 
-  const fetchWithdrawalRequests = async (staffIds) => {
+  const fetchWithdrawalRequests = async () => {
     try {
-      const allRequests = [];
-      for (const staffId of staffIds) {
-        const data = mockWithdrawalRequests[staffId] || [];
-        allRequests.push(...data);
-      }
+      const response = await getTeamPendingWithdrawals(staffId);
+      
+      // Transform the nested data structure into a flat array of requests
+      const allRequests = response.team_pending_requests.reduce((acc, member) => {
+        const transformedRequests = member.pending_requests.map(request => ({
+          ...request,
+          type: getShiftType(request.is_am, request.is_pm)
+        }));
+        return [...acc, ...transformedRequests];
+      }, []);
+
       setRequests(allRequests);
       setLoading(false);
     } catch (err) {
@@ -58,9 +37,8 @@ const WithdrawalRequests = () => {
   };
 
   useEffect(() => {
-    const staffIds = [1, 2]; // In real implementation, this might come from an API
-    fetchWithdrawalRequests(staffIds);
-  }, []);
+    fetchWithdrawalRequests();
+  }, [staffId]);
 
   if (loading) {
     return <div>Loading withdrawal requests...</div>;
@@ -71,36 +49,41 @@ const WithdrawalRequests = () => {
   }
 
   return (
-    <div className="withdrawal-requests-container" style={{ padding: '20px' }}>
+    <div className="withdrawal-requests-container">
       <h1>Pending Withdrawal Requests</h1>
-      <table className="withdrawal-requests-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+      <table className="withdrawal-requests-table">
         <thead>
           <tr>
-            <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid #ddd' }}>Request ID</th>
-            <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid #ddd' }}>Date</th>
-            <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid #ddd' }}>Type</th>
-            <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid #ddd' }}>Reason</th>
-            <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid #ddd' }}>Action</th>
+            <th>Request ID</th>
+            <th>Staff ID</th>
+            <th>Date</th>
+            <th>Shift Type</th>
+            <th>Reason</th>
+            <th>Action</th>
           </tr>
         </thead>
         <tbody>
-          {requests.map((request) => (
-            <tr key={request.withdrawal_id}>
-              <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>{request.request_id}</td>
-              <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>{request.schedule_date}</td>
-              <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>{request.type}</td>
-              <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>{request.reason}</td>
-              <td style={{ padding: '10px', borderBottom: '1px solid #ddd' }}>
-                <Link to={`/${staffId}/3/withdrawal-approval/${request.staff_id}/${request.withdrawal_id}`}>
-                  View
-                </Link>
-              </td>
-            </tr>
-          ))}
+        {requests.map((request) => (
+          <tr key={request.request_id}>
+            <td>{request.request_id}</td>
+            <td>{request.staff_id}</td>
+            <td>{request.specific_date}</td>
+            <td>{request.type}</td>
+            <td>{request.request_reason}</td>
+            <td>
+              <Link 
+                to={`/${staffId}/3/withdrawal-approval/${request.staff_id}/${request.request_id}`}
+                state={{ request }} // Pass the request data through Link's state
+              >
+                View
+              </Link>
+            </td>
+          </tr>
+        ))}
         </tbody>
       </table>
     </div>
   );
 };
 
-export default WithdrawalRequests;
+export default WithdrawRequests;
