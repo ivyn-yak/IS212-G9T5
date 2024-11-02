@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { processWithdrawalDecision } from '../../api/requests/withdrawRequestsApi';
-import './WithdrawalApprovalScreen.css';
+import './withdrawalApprovalScreen.css';
 
 const WithdrawalApprovalScreen = () => {
   const { staffId, approval_staff_id, withdrawal_id } = useParams();
