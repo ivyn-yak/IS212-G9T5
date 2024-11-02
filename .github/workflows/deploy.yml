@@ -3,7 +3,7 @@ name: Build and Deploy to Docker Hub and AWS EC2
 on:
   push:
     branches:
-      - main 
+      - ivyn/cd 
 
 jobs:
   build-and-push:
@@ -30,6 +30,6 @@ jobs:
         run: |
           echo "${PRIVATE_KEY}" > priv-key.pem
           chmod 600 priv-key.pem
-          ssh -o StrictHostKeyChecking=no -i priv-key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+          ssh -o StrictHostKeyChecking=no -i priv-key.pem ec2-user@3.107.212.99 << 'EOF'
             docker-compose up -d --force-recreate
           EOF
