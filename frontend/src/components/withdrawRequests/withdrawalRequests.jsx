@@ -63,20 +63,23 @@ const WithdrawRequests = () => {
           </tr>
         </thead>
         <tbody>
-          {requests.map((request) => (
-            <tr key={request.request_id}>
-              <td>{request.request_id}</td>
-              <td>{request.staff_id}</td>
-              <td>{request.specific_date}</td>
-              <td>{request.type}</td>
-              <td>{request.request_reason}</td>
-              <td>
-                <Link to={`/${staffId}/3/withdrawal-approval/${request.staff_id}/${request.request_id}`}>
-                  View
-                </Link>
-              </td>
-            </tr>
-          ))}
+        {requests.map((request) => (
+          <tr key={request.request_id}>
+            <td>{request.request_id}</td>
+            <td>{request.staff_id}</td>
+            <td>{request.specific_date}</td>
+            <td>{request.type}</td>
+            <td>{request.request_reason}</td>
+            <td>
+              <Link 
+                to={`/${staffId}/3/withdrawal-approval/${request.staff_id}/${request.request_id}`}
+                state={{ request }} // Pass the request data through Link's state
+              >
+                View
+              </Link>
+            </td>
+          </tr>
+        ))}
         </tbody>
       </table>
     </div>

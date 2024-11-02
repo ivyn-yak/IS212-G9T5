@@ -13,3 +13,15 @@ export const getTeamPendingWithdrawals = async (managerId) => {
     throw error;
   }
 };
+
+export const processWithdrawalDecision = async (payload) => {
+  try {
+    const response = await axios.post(`${BASE_URL}/approve_withdrawal`, payload);
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      throw new Error(error.response.data.error || 'Failed to process withdrawal decision');
+    }
+    throw error;
+  }
+};

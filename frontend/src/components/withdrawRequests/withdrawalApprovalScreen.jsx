@@ -1,112 +1,94 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { processWithdrawalDecision } from '../../api/requests/withdrawRequestsApi';
+import './WithdrawalApprovalScreen.css';
 
 const WithdrawalApprovalScreen = () => {
   const { staffId, approval_staff_id, withdrawal_id } = useParams();
-  const [request, setRequest] = useState(null);
+  const location = useLocation();
+  const { request } = location.state || {};
   const [decisionNotes, setDecisionNotes] = useState('');
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
-  // Mock data for a single withdrawal request
-  const mockWithdrawalRequest = {
-    withdrawal_id: 1,
-    request_id: 101,
-    staff_id: 1,
-    schedule_date: '2024-10-01',
-    type: 'Full Day',
-    reason: 'Need to be in office for important meeting',
-    status: 'pending'
-  };
-
-  useEffect(() => {
-    // Simulate fetching withdrawal request details
-    setRequest(mockWithdrawalRequest);
-    setLoading(false);
-  }, [withdrawal_id]);
-
   const handleDecision = async (decisionStatus) => {
+    if (!decisionNotes.trim()) {
+      setError('Decision notes are required');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setError(null);
+
     try {
       const payload = {
-        withdrawal_id: withdrawal_id,
+        request_id: withdrawal_id,
+        specific_date: request.specific_date,
         manager_id: staffId,
-        staff_id: approval_staff_id,
         decision_status: decisionStatus,
-        decision_notes: decisionNotes
+        decision_notes: decisionNotes.trim()
       };
 
-      console.log('Payload that will be sent:', payload);
+      const response = await processWithdrawalDecision(payload);
       
-      // Here you would make the actual API call
-      
-      alert(`Withdrawal request ${decisionStatus}`);
+      alert(`Withdrawal request ${decisionStatus.toLowerCase()} successfully`);
       navigate(`/${staffId}/3/withdrawal-requests`);
     } catch (error) {
       console.error('Error processing withdrawal decision:', error);
-      setError('Failed to process the decision. Please try again.');
+      setError(error.message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error}</div>;
-  if (!request) return <div>Request not found</div>;
+  if (!request) return <div className="approval-screen-error">Request not found</div>;
 
   return (
-    <div style={{ padding: '20px' }}>
+    <div className="approval-screen-container">
       <h2>Withdrawal Request Approval</h2>
-      <div style={{ marginBottom: '20px' }}>
+      <div className="request-details">
         <h3>Request Details:</h3>
         <p><strong>Reference Request ID:</strong> {request.request_id}</p>
-        <p><strong>Date:</strong> {request.schedule_date}</p>
+        <p><strong>Staff ID:</strong> {request.staff_id}</p>
+        <p><strong>Date:</strong> {request.specific_date}</p>
         <p><strong>Type:</strong> {request.type}</p>
-        <p><strong>Staff's Reason:</strong> {request.reason}</p>
+        <p><strong>Staff's Reason:</strong> {request.request_reason}</p>
       </div>
       
-      <div style={{ marginBottom: '20px' }}>
+      {error && (
+        <div className="error-message">
+          {error}
+        </div>
+      )}
+
+      <div className="decision-notes">
         <label>
           Decision Notes:
           <textarea
             value={decisionNotes}
             onChange={(e) => setDecisionNotes(e.target.value)}
-            placeholder="Add your reason for approval/rejection..."
-            style={{ 
-              width: '100%', 
-              minHeight: '100px',
-              marginTop: '10px',
-              padding: '8px'
-            }}
+            placeholder="Add your reason for approval/rejection (required)"
+            required
+            disabled={isSubmitting}
           />
         </label>
       </div>
 
-      <div>
+      <div className="decision-buttons">
         <button 
-          onClick={() => handleDecision('approved')}
-          style={{
-            backgroundColor: 'green',
-            color: 'white',
-            padding: '8px 16px',
-            marginRight: '10px',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer'
-          }}
+          onClick={() => handleDecision('Approved')}
+          className="approve-button"
+          disabled={isSubmitting}
         >
-          Approve
+          {isSubmitting ? 'Processing...' : 'Approve'}
         </button>
         <button 
-          onClick={() => handleDecision('rejected')}
-          style={{
-            backgroundColor: 'red',
-            color: 'white',
-            padding: '8px 16px',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer'
-          }}
+          onClick={() => handleDecision('Rejected')}
+          className="reject-button"
+          disabled={isSubmitting}
         >
-          Reject
+          {isSubmitting ? 'Processing...' : 'Reject'}
         </button>
       </div>
     </div>
