@@ -3,7 +3,7 @@ name: Build and Deploy to Docker Hub and AWS EC2
 on:
   push:
     branches:
-      - ivyn/cd 
+      - main 
 
 jobs:
   build-and-push:
