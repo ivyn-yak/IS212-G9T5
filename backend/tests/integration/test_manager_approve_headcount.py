@@ -144,34 +144,6 @@ class TestManagerApproveAdhoc(TestApp):
         response = self.client.post("/api/approve",
                                      data=json.dumps(request_body),
                                      content_type='application/json')
-        self.assertEqual(response.status_code, 404)
-        self.assertEqual(response.get_json(), {"error": "Employee with staff_id 0 not found"})
-
-    def test_approve_adhoc_staff_not_found(self):
-        bad_request = WFHRequests(
-            request_id="1",
-            staff_id=0,
-            manager_id=140001,
-            specific_date=date(2024, 9, 15),
-            is_am=False,
-            is_pm=True,
-            request_status='Pending',
-            apply_date=date(2024, 9, 10),
-            request_reason='Personal matters'
-        )
-
-        db.session.add(bad_request)
-        db.session.commit()
-
-        request_body = {
-            'request_id': "1", 
-            'manager_id': 140001,
-            "decision_notes": "Nil",
-            'decision_status': 'Approved'
-        }
-        response = self.client.post("/api/approve",
-                                     data=json.dumps(request_body),
-                                     content_type='application/json')
         
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.get_json(), {"error": "Employee with staff_id 0 not found"})
