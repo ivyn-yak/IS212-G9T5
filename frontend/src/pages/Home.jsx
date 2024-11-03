@@ -1,3 +1,4 @@
+import { Padding } from '@mui/icons-material';
 import React, { useEffect } from 'react';
 
 function Home() {
@@ -6,7 +7,7 @@ function Home() {
   }, []);
 
   return (
-    <div>
+    <div style={{ padding: '10px' }}>
       <h1>Hello, welcome to our page!</h1>
       <p>We are penultimate students from SMU Information Systems, and this is our Work From Home System application for Software Project Management (IS212).</p>
       <p>Here is a link to our <a href="https://github.com/nlcchi/IS212-G9T5">GitHub repository</a>!</p>

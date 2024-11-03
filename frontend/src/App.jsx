@@ -56,6 +56,14 @@ function AppContent() {
     }
   }, [staffId]);
 
+  if (staffId === 'login') {
+    return <Home />;
+  }
+  
+  if (!staffId) {
+    return <Home />;
+  }
+
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -154,8 +162,9 @@ function App() {
   return (
     <Router>
       <Routes>
+        <Route path="/" element={<Home />} />
         <Route path="/:staffId/*" element={<AppContent />} />
-        <Route path="*" element={<Navigate to="/login" replace />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />      
       </Routes>
     </Router>
   );

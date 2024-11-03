@@ -204,8 +204,8 @@ const Sidebar = ({ staffRole }) => {
           <ListItem 
             button 
             component={Link} 
-            to="/logout"
-            selected={location.pathname === '/logout'}
+            to="/"
+            selected={location.pathname === '/'}
           >
             <ListItemIcon>
               <ExitToApp className="sidebar-icon" />
