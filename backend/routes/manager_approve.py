@@ -134,15 +134,11 @@ def manager_approve_recurring():
         employee = Employee.query.filter_by(staff_id=staff_id).first()
 
         reporting_manager_id = employee.reporting_manager
-        if not reporting_manager_id:
-            return jsonify({"error": f"Reporting manager for employee {staff_id} not found"}), 404
 
         employees_under_same_manager = Employee.query.filter_by(reporting_manager=reporting_manager_id).all()
         total_employees = len(employees_under_same_manager)
 
         same_request = WFHRequests.query.filter_by(request_id=request_id).all()
-        if not same_request:
-            return jsonify({"error": "No existing requests found for the given request_id"}), 416
 
         for arrangement in same_request:
             arrangement_date = arrangement.specific_date
