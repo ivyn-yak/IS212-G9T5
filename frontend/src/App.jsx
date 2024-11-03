@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate, useParams, Outlet } from 'react-router-dom';
+import getRole from './api/getRoleApi';
 import Home from './pages/Home';
 import StaffViewSchedule from './pages/StaffViewSchedule';
 import DeptView from './pages/HrView/DeptView';
@@ -39,25 +40,19 @@ function AppContent() {
 
   useEffect(() => {
     if (staffId) {
-      fetch(`http://localhost:5001/api/role/${staffId}`)
-        .then(response => {
-          if (!response.ok) {
-            throw new Error('Network response was not ok');
-          }
-          console.log('response:', response);
-          return response.json();
-        })
-        .then(data => {
-          if (data.error) {
-            throw new Error(data.error);
-          }
+      const fetchData = async () => {
+        try {
+          const data = await getRole(staffId);
+          
           setStaffRole(data.role);
           setLoading(false);
-        })
-        .catch(error => {
-          console.error('Error fetching staff role:', error);
+        } catch (error) {
+          setError(error.message);
           setLoading(false);
-        });
+        }
+      };
+  
+      fetchData();
     }
   }, [staffId]);
 
