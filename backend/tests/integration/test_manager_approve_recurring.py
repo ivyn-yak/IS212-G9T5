@@ -138,9 +138,6 @@ class TestManagerApproveRecurring(TestApp):
                                     data=json.dumps(request_body),
                                     content_type='application/json')
 
-        if response.status_code != 201:
-            print("Response Data:", response.get_json()) 
-
         self.assertEqual(response.status_code, 201)
         self.assertIn("Recurring WFH requests processed successfully", response.get_json()["message"])
 
