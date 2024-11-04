@@ -95,7 +95,7 @@ def manager_approve_adhoc():
         if new_req is None:
             return jsonify({"error": "Request not found"}), 404
         
-        data["specific_date"] = start_date
+        data["specific_date"] = datetime.strptime(start_date, '%Y-%m-%d').date()
         decision = create_request_decision(data)
         if "error" in decision:
             return jsonify(decision), 500 

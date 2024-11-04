@@ -108,7 +108,7 @@ class TestManagerApproveAdhoc(TestApp):
 
     def test_approve_adhoc_missing_field(self):
         request_body = {
-            'manager_id': 140001,
+            'manager_id': "140001",
             "decision_notes": "Nil",
             'decision_status': 'Approved'
         }
@@ -121,7 +121,7 @@ class TestManagerApproveAdhoc(TestApp):
     def test_approve_adhoc_request_not_found(self):
         request_body = {
             'request_id': "999", 
-            'manager_id': 140001,
+            'manager_id': "140001",
             "decision_notes": "Nil",
             'decision_status': 'Approved'
         }
@@ -149,7 +149,7 @@ class TestManagerApproveAdhoc(TestApp):
 
         request_body = {
             'request_id': "1", 
-            'manager_id': 140001,
+            'manager_id': "140001",
             "decision_notes": "Nil",
             'decision_status': 'Approved'
         }
@@ -178,7 +178,7 @@ class TestManagerApproveAdhoc(TestApp):
 
         request_body = {
             'request_id': "1", 
-            'manager_id': 0,
+            'manager_id': "0",
             "decision_notes": "Nil",
             'decision_status': 'Approved'
         }
@@ -206,7 +206,7 @@ class TestManagerApproveAdhoc(TestApp):
 
         request_body = {
             'request_id': "1", 
-            'manager_id': 140009,
+            'manager_id': "140009",
             "decision_notes": "Nil",
             'decision_status': 'Approved'
         }
@@ -234,7 +234,7 @@ class TestManagerApproveAdhoc(TestApp):
 
         request_body = {
             'request_id': "1", 
-            'manager_id': 140001,
+            'manager_id': "140001",
             "decision_notes": "Nil",
             'decision_status': 'Approved'
         }
@@ -267,13 +267,13 @@ class TestManagerApproveAdhoc(TestApp):
             'request_id': "2",
             'decision_status': 'Approved',
             'decision_notes': 'Nil',
-            'manager_id': 140001
+            'manager_id': "140001"
         }
 
         response = self.client.post("/api/approve",
                                     data=json.dumps(request_body),
                                     content_type='application/json')
-        
+                
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.get_json()["message"], "Request updated and manager's decision stored successfully")
         self.assertEqual(response.get_json()["request"], {
@@ -291,6 +291,7 @@ class TestManagerApproveAdhoc(TestApp):
         self.assertEqual(response.get_json()["decision"], {
             "decision_id": 1,
             "request_id": "2",
+            'specific_date': "2024-09-15",
             "manager_id": 140001,
             "decision_date": "2024-12-12",
             "decision_status": "Approved",
@@ -342,7 +343,7 @@ class TestManagerApproveAdhoc(TestApp):
             'request_id': "2",
             'decision_status': 'Approved',
             'decision_notes': 'Nil',
-            'manager_id': 140001
+            'manager_id': "140001"
         }
 
         response = self.client.post("/api/approve",
@@ -387,7 +388,7 @@ class TestManagerApproveAdhoc(TestApp):
             'request_id': "2",
             'decision_status': 'Approved',
             'decision_notes': 'Nil',
-            'manager_id': 140001
+            'manager_id': "140001"
         }
 
         response = self.client.post("/api/approve",
@@ -411,6 +412,7 @@ class TestManagerApproveAdhoc(TestApp):
         self.assertEqual(response.get_json()["decision"], {
             "decision_id": 1,
             "request_id": "2",
+            'specific_date': "2024-09-15",
             "manager_id": 140001,
             "decision_date": "2024-12-12",
             "decision_status": "Approved",
