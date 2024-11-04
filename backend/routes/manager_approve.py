@@ -38,7 +38,7 @@ def manager_approve_adhoc():
         if not manager:
             return jsonify({"error": f"Reporting manager for employee {staff_id} not found"}), 404
         
-        if employee.reporting_manager != data["manager_id"]: #checks if managerid from payload is the manager of employee
+        if str(employee.reporting_manager) != data["manager_id"]: #checks if managerid from payload is the manager of employee
             return jsonify({"error": f"Employee {staff_id} reports under {employee.reporting_manager} instead of {data['manager_id']}"}), 400
         
         request_status = req["request_status"]
@@ -95,12 +95,13 @@ def manager_approve_adhoc():
         if new_req is None:
             return jsonify({"error": "Request not found"}), 404
         
-        log_wfh_request(new_req["new_request"]) # add to wfhrequestlogs
-
+        data["specific_date"] = datetime.strptime(start_date, '%Y-%m-%d').date()
         decision = create_request_decision(data)
         if "error" in decision:
             return jsonify(decision), 500 
         
+        log_wfh_request(new_req["new_request"]) # add to wfhrequestlogs
+
         return jsonify({
             "message": "Request updated and manager's decision stored successfully",
             "request": new_req["new_request"],
@@ -182,9 +183,12 @@ def manager_approve_recurring():
             
         for arrangement in same_request:
             arrangement_date = arrangement.specific_date
+            data["specific_date"] = arrangement_date
             decision = create_request_decision(data)
+
             if "error" in decision:
                 return jsonify({"error": f"Error creating decision for arrangement {arrangement}: {decision['error']}"}), 500
+            
             updated_request = update_request(request_id, arrangement_date, {"request_status": data.get("decision_status")})
             log_wfh_request(updated_request["new_request"]) # add to wfhrequestlogs
 
@@ -197,8 +201,6 @@ def manager_approve_recurring():
         db.session.rollback()
         print(f"Error: {str(e)}")
         return jsonify({"error": str(e)}), 500
-    
-
 
 @approve.route("/api/approve_withdrawal", methods=["POST"])
 def manager_approve_withdrawal():

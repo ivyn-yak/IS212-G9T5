@@ -6,7 +6,7 @@ def create_withdraw_decision(data):
         decision_date = datetime.now()
         specific_date = datetime.strptime(data['specific_date'], '%Y-%m-%d').date()
         new_decision = WithdrawDecisions(
-            request_id=int(data["request_id"]),
+            request_id=data["request_id"],
             specific_date=specific_date,
             manager_id=data["manager_id"],
             decision_date=decision_date.date(),
