@@ -16,7 +16,7 @@ export const getTeamPendingWithdrawals = async (managerId) => {
 
 export const processWithdrawalDecision = async (payload) => {
   try {
-    const response = await axios.post(`${BASE_URL}/approve_withdrawal`, payload);
+    const response = await axios.post(`${BASE_URL}/api/approve_withdrawal`, payload);
     return response.data;
   } catch (error) {
     if (error.response) {

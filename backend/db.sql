@@ -34,7 +34,7 @@ CREATE TABLE WFHRequests (
 
 -- RequestDecisions Table
 CREATE TABLE RequestDecisions (
-    decision_id INT PRIMARY KEY,
+    decision_id SERIAL PRIMARY KEY,
     request_id VARCHAR(36),
     specific_date DATE,
     manager_id INT,
@@ -47,7 +47,7 @@ CREATE TABLE RequestDecisions (
 
 -- WithdrawDecisions Table
 CREATE TABLE WithdrawDecisions (
-    withdraw_decision_id INT PRIMARY KEY,
+    withdraw_decision_id SERIAL PRIMARY KEY,
     request_id VARCHAR(36),
     specific_date DATE,
     manager_id INT,

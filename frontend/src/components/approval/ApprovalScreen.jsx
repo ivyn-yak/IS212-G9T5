@@ -75,7 +75,7 @@ const ApprovalScreen = () => {
       alert(`Decision successfully made: ${decisionStatus}`);
       setError(null);
 
-      navigate(`/3/pending-requests`);
+      navigate(`/${staffId}/3/pending-requests`);
     } catch (error) {
       console.error('Error submitting the decision:', error);
       setError(error.message || 'An error occurred while submitting the decision.');

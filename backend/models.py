@@ -70,18 +70,24 @@ class RequestDecisions(db.Model):
     __tablename__ = 'requestdecisions'
 
     decision_id = Column(Integer, primary_key=True)
-    request_id = Column(String, ForeignKey('wfhrequests.request_id'), nullable=False)
+    specific_date = Column(Date, nullable=False)
+    request_id = Column(String, nullable=False)
     manager_id = Column(Integer, ForeignKey('employee.staff_id'), nullable=False)  # Manager who made the decision
     decision_date = Column(Date, nullable=False)
     decision_status = Column(Enum('Approved', 'Rejected', name='decision_status'), nullable=False)
     decision_notes = Column(Text, nullable=True)
 
     manager = db.relationship('Employee', foreign_keys=[manager_id])
-    work_from_home_request = db.relationship('WFHRequests')
+    work_from_home_request = db.relationship(
+        'WFHRequests', 
+        foreign_keys=[request_id, specific_date], 
+        primaryjoin='and_(RequestDecisions.request_id == WFHRequests.request_id, RequestDecisions.specific_date == WFHRequests.specific_date)'
+    )
 
     def json(self):
         return {
             "decision_id": self.decision_id,
+            "specific_date": str(self.specific_date),
             "request_id": str(self.request_id),
             "manager_id": self.manager_id,
             "decision_date": str(self.decision_date),
