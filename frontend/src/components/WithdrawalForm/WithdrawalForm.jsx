@@ -1,5 +1,7 @@
+// src/components/WithdrawalForm.jsx
 import React, { useState, useEffect } from 'react';
-import { format, addMonths, subMonths } from 'date-fns';
+import { format } from 'date-fns';
+import { fetchApprovedSchedules, submitWithdrawal } from '../../api/withdrawFormApi';
 import './WithdrawalForm.css';
 
 const WithdrawalForm = ({ staffId }) => {
@@ -9,54 +11,19 @@ const WithdrawalForm = ({ staffId }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState('');
 
-  useEffect(() => {
-    fetchApprovedSchedules();
-  }, [staffId]);
-
-  const getShiftType = (is_am, is_pm) => {
-    if (is_am && is_pm) return "Full Day";
-    if (is_am) return "AM Shift";
-    if (is_pm) return "PM Shift";
-    return "Unknown";
-  };
-
-  const fetchApprovedSchedules = async () => {
-    try {
-      const today = new Date();
-      const startDate = format(subMonths(today, 2), 'yyyy-MM-dd');
-      const endDate = format(addMonths(today, 3), 'yyyy-MM-dd');
-
-      const response = await fetch(
-        `http://localhost:5001/api/staff/${staffId}/wfh_requests?start_date=${startDate}&end_date=${endDate}`
-      );
-
-      const data = await response.json();
-      console.log(data);
-      
-      if (response.status === 404 || data.length === 0) {
-        setApprovedSchedules([]);
-        setMessage('You have no approved requests to withdraw');
-        return;
-      }
-      
-      if (!response.ok) {
-        setMessage('Failed to fetch approved schedules');
-        return;
-      }
-
-      // Transform the data to include the shift type
-      const transformedData = data.map(schedule => ({
-        ...schedule,
-        id: schedule.request_id,  // Map request_id to id
-        type: getShiftType(schedule.is_am, schedule.is_pm)
-      }));
-
-      setApprovedSchedules(transformedData);
+  const loadApprovedSchedules = async () => {
+    const { data, error } = await fetchApprovedSchedules(staffId);
+    setApprovedSchedules(data);
+    if (error) {
+      setMessage(error);
+    } else {
       setMessage('');
-    } catch (error) {
-      setMessage('Failed to fetch approved schedules');
     }
   };
+
+  useEffect(() => {
+    loadApprovedSchedules();
+  }, [staffId]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -72,29 +39,21 @@ const WithdrawalForm = ({ staffId }) => {
         return;
       }
 
-      const response = await fetch('http://localhost:5001/api/withdraw', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          request_id: selectedSchedule,
-          reason: reason,
-          specific_date: selectedRequest.specific_date
-        }),
+      const { success, error } = await submitWithdrawal({
+        request_id: selectedSchedule,
+        reason: reason,
+        specific_date: selectedRequest.specific_date
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        setMessage(data.error || 'Failed to submit withdrawal');
+      if (!success) {
+        setMessage(error);
         return;
       }
 
       setMessage('Withdrawal submitted successfully');
       setSelectedSchedule('');
       setReason('');
-      fetchApprovedSchedules();
+      loadApprovedSchedules();
     } catch (error) {
       setMessage('Failed to submit withdrawal');
     } finally {
