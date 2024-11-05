@@ -3,6 +3,9 @@ import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { fetchApprovedSchedules, submitWithdrawal } from '../../api/withdrawFormApi';
 import './WithdrawalForm.css';
+import config from '../../config/config';
+
+const BASE_URL = config.ENDPOINT_BE_URL;
 
 const WithdrawalForm = ({ staffId }) => {
   const [approvedSchedules, setApprovedSchedules] = useState([]);
@@ -38,6 +41,7 @@ const WithdrawalForm = ({ staffId }) => {
         setMessage('Invalid schedule selected');
         return;
       }
+
 
       const { success, error } = await submitWithdrawal({
         request_id: selectedSchedule,

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'; 
 import { Link, useParams } from 'react-router-dom';  
+import { getTeamPendingRequests } from '../../api/requests/pendingRequestsApi';
 
 const PendingRequests = () => {   
   const { staffId } = useParams(); // Assumes managerId is part of the URL
@@ -11,14 +12,9 @@ const PendingRequests = () => {
   const fetchAllRequests = async () => {     
     try {       
       const manager_id = staffId;
-      const response = await fetch(`/api/team-manager/${manager_id}/pending-requests`);
+      const response = await getTeamPendingRequests(manager_id);
       
-      if (!response.ok) {
-        throw new Error('Failed to fetch pending requests');
-      }
-      
-      const data = await response.json();
-      const allRequests = data.team_pending_requests.flatMap(member => 
+      const allRequests = response.team_pending_requests.flatMap(member => 
         member.pending_requests.map(request => ({
           ...request,
           dates: [request.specific_date] // Group requests by request_id later

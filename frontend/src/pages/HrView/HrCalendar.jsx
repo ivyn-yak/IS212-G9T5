@@ -12,6 +12,9 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import dayjs from 'dayjs';
 import '../../components/WeeklyCalendar/WeeklyCalendar.css';
+import config from '../../config/config';
+
+const BASE_URL = config.ENDPOINT_BE_URL;
 
 const HrCalendar = () => {
   const [currentDate, setCurrentDate] = useState(dayjs());
@@ -40,7 +43,7 @@ const HrCalendar = () => {
     const fetchManagers = async () => {
       setLoading(true);
       try {
-        const response = await fetch('/api/managers');
+        const response = await fetch(`${BASE_URL}/api/managers`);
         const data = await response.json();
         setDepartmentManagers(data);
         setError(null);
@@ -65,7 +68,7 @@ const HrCalendar = () => {
         
         // Fetch schedules for all managers in parallel
         const schedulePromises = Object.values(departmentManagers).flat().map(manager =>
-          fetch(`/api/manager/${manager.staff_id}/team_schedule?start_date=${startDate}&end_date=${endDate}`)
+          fetch(`${BASE_URL}/api/manager/${manager.staff_id}/team_schedule?start_date=${startDate}&end_date=${endDate}`)
             .then(res => res.json())
             .then(data => ({ [manager.staff_id]: data }))
         );

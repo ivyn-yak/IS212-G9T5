@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import config from '../../config/config';
+
+const BASE_URL = config.ENDPOINT_BE_URL;
 
 const ApprovalScreen = () => {
   
@@ -14,7 +17,7 @@ const ApprovalScreen = () => {
 
   const fetchRequestDetails = async () => {
     try {
-      const response = await fetch(`/api/request/${approval_req_id}`);
+      const response = await fetch(`${BASE_URL}/api/request/${approval_req_id}`);
       
       if (!response.ok) {
         throw new Error('Failed to fetch the request');
@@ -56,7 +59,7 @@ const ApprovalScreen = () => {
         manager_id: staffId
       };
 
-      const endpoint = isRecurring ? '/api/approve_recurring' : '/api/approve';
+      const endpoint = isRecurring ? `${BASE_URL}/api/approve_recurring` : `${BASE_URL}/api/approve`;
 
       const response = await fetch(endpoint, {
         method: 'POST',
