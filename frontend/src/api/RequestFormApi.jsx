@@ -4,13 +4,13 @@ import config from '../config/config';
 const BASE_URL = config.ENDPOINT_BE_URL;
 
 export const dayMapping = {
-  'M': 'monday',
-  'T': 'tuesday',
-  'W': 'wednesday',
-  'R': 'thursday',
-  'F': 'friday',
-  'S': 'saturday',
-  'U': 'sunday'
+  'Mon': 'monday',
+  'Tue': 'tuesday',
+  'Wed': 'wednesday',
+  'Thu': 'thursday',
+  'Fri': 'friday',
+  'Sat': 'saturday',
+  'Sun': 'sunday'
 };
 
 export const submitWFHRequest = async (formData) => {
