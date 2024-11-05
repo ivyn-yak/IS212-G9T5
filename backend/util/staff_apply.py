@@ -20,7 +20,10 @@ def handle_adhoc_request(data):
         
         specific_date = data['start_date']
         request = check_staff_request(staff_id, specific_date)
-        if request:
+
+        status_to_check = ["Withdrawn", "Cancelled", "Rejected"]
+
+        if request and request.request_status not in status_to_check:
             return jsonify({"error": f"Staff has an existing request for {specific_date}"}), 400
 
         new_uuid = uuid.uuid4()
@@ -109,6 +112,12 @@ def handle_recurring_request(data):
 
         request_list = []
         for recurring_date in recurring_dates:
+            request = check_staff_request(staff_id, recurring_date)
+
+            status_to_check = ["Withdrawn", "Cancelled", "Rejected"]
+            if request and request.request_status not in status_to_check:
+                return jsonify({"error": f"Staff has an existing request for {recurring_date}"}), 400
+
             new_request = WFHRequests(
                 request_id = uuid_string,
                 staff_id=staff_id,
@@ -132,9 +141,8 @@ def handle_recurring_request(data):
                 reason_log=new_request.request_reason
             )
 
-        db.session.add(new_request_log)
+            db.session.add(new_request_log)
 
-        
         db.session.commit()
 
         return jsonify({
