@@ -108,7 +108,7 @@ class TestManagerApproveAdhoc(TestApp):
 
     def test_approve_adhoc_missing_field(self):
         request_body = {
-            'manager_id': "140001",
+            'manager_id': 140001,
             "decision_notes": "Nil",
             'decision_status': 'Approved'
         }
@@ -121,7 +121,7 @@ class TestManagerApproveAdhoc(TestApp):
     def test_approve_adhoc_request_not_found(self):
         request_body = {
             'request_id': "999", 
-            'manager_id': "140001",
+            'manager_id': 140001,
             "decision_notes": "Nil",
             'decision_status': 'Approved'
         }
@@ -149,7 +149,7 @@ class TestManagerApproveAdhoc(TestApp):
 
         request_body = {
             'request_id': "1", 
-            'manager_id': "140001",
+            'manager_id': 140001,
             "decision_notes": "Nil",
             'decision_status': 'Approved'
         }
@@ -178,7 +178,7 @@ class TestManagerApproveAdhoc(TestApp):
 
         request_body = {
             'request_id': "1", 
-            'manager_id': "0",
+            'manager_id': 0,
             "decision_notes": "Nil",
             'decision_status': 'Approved'
         }
@@ -206,7 +206,7 @@ class TestManagerApproveAdhoc(TestApp):
 
         request_body = {
             'request_id': "1", 
-            'manager_id': "140009",
+            'manager_id': 140009,
             "decision_notes": "Nil",
             'decision_status': 'Approved'
         }
@@ -234,7 +234,7 @@ class TestManagerApproveAdhoc(TestApp):
 
         request_body = {
             'request_id': "1", 
-            'manager_id': "140001",
+            'manager_id': 140001,
             "decision_notes": "Nil",
             'decision_status': 'Approved'
         }
@@ -267,7 +267,7 @@ class TestManagerApproveAdhoc(TestApp):
             'request_id': "2",
             'decision_status': 'Approved',
             'decision_notes': 'Nil',
-            'manager_id': "140001"
+            'manager_id': 140001
         }
 
         response = self.client.post("/api/approve",
@@ -343,7 +343,7 @@ class TestManagerApproveAdhoc(TestApp):
             'request_id': "2",
             'decision_status': 'Approved',
             'decision_notes': 'Nil',
-            'manager_id': "140001"
+            'manager_id': 140001
         }
 
         response = self.client.post("/api/approve",
@@ -388,7 +388,7 @@ class TestManagerApproveAdhoc(TestApp):
             'request_id': "2",
             'decision_status': 'Approved',
             'decision_notes': 'Nil',
-            'manager_id': "140001"
+            'manager_id': 140001
         }
 
         response = self.client.post("/api/approve",
