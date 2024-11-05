@@ -84,6 +84,11 @@ function AppContent() {
               
               {/* HR Routes (Role 1) */}
               <Route path="1">
+              <Route path="dept-view" element={
+                  <ProtectedRoute allowedRoles={[ROLES.HR]} staffRole={staffRole}>
+                    <DeptView />
+                  </ProtectedRoute>
+                } />
                 <Route path="hr-calendar" element={
                   <ProtectedRoute allowedRoles={[ROLES.HR]} staffRole={staffRole}>
                     <HrCalendar />

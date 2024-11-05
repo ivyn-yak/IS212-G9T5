@@ -82,11 +82,6 @@ const Sidebar = ({ staffRole }) => {
       heading: 'HR MANAGEMENT',
       items: [
         {
-          text: 'Department View',
-          icon: <People className="sidebar-icon" />,
-          to: `/${staffId}/1/dept-view`
-        },
-        {
           text: 'HR Calendar',
           icon: <Assessment className="sidebar-icon" />,
           to: `/${staffId}/1/hr-calendar`
