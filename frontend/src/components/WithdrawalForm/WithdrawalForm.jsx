@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { format, addMonths, subMonths } from 'date-fns';
 import './WithdrawalForm.css';
+import config from '../../config/config';
+
+const BASE_URL = config.ENDPOINT_BE_URL;
 
 const WithdrawalForm = ({ staffId }) => {
   const [approvedSchedules, setApprovedSchedules] = useState([]);
@@ -27,7 +30,7 @@ const WithdrawalForm = ({ staffId }) => {
       const endDate = format(addMonths(today, 3), 'yyyy-MM-dd');
 
       const response = await fetch(
-        `http://localhost:5001/api/staff/${staffId}/wfh_requests?start_date=${startDate}&end_date=${endDate}`
+        `${BASE_URL}/api/staff/${staffId}/wfh_requests?start_date=${startDate}&end_date=${endDate}`
       );
 
       const data = await response.json();
@@ -72,7 +75,7 @@ const WithdrawalForm = ({ staffId }) => {
         return;
       }
 
-      const response = await fetch('http://localhost:5001/api/withdraw', {
+      const response = await fetch(`${BASE_URL}/api/withdraw`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

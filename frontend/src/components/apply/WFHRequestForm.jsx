@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
+import config from '../../config/config';
+
+const BASE_URL = config.ENDPOINT_BE_URL;
 
 const WFHRequestForm = () => {
   const { staffId } = useParams();
@@ -65,7 +68,7 @@ const WFHRequestForm = () => {
     console.log(payload);
 
     try {
-      const response = await fetch('http://localhost:5001/api/apply', {
+      const response = await fetch(`${BASE_URL}/api/apply`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
