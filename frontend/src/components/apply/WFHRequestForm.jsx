@@ -2,9 +2,15 @@
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { submitWFHRequest, dayMapping } from '../../api/RequestFormApi';
+import { format, addMonths, subMonths } from 'date-fns';
 
 const WFHRequestForm = () => {
   const { staffId } = useParams();
+
+  const today = new Date();
+  const minDate = format(subMonths(today, 2), 'yyyy-MM-dd');
+  const maxDate = format(addMonths(today, 3), 'yyyy-MM-dd');
+
   const [formData, setFormData] = useState({
     staff_id: staffId,
     request_type: 'Ad-hoc',
@@ -13,7 +19,7 @@ const WFHRequestForm = () => {
     recurrence_days: '',
     is_am: false,
     is_pm: false,
-    apply_date: new Date().toISOString().split('T')[0],
+    apply_date: format(today, 'yyyy-MM-dd'),
     request_reason: ''
   });
 
@@ -31,12 +37,23 @@ const WFHRequestForm = () => {
       newErrors.recurrence_days = 'Please select a recurring day';
     }
 
+    const startDate = new Date(formData.start_date);
     if (!formData.start_date) {
       newErrors.start_date = 'Please select a start date';
+    } else if (startDate < new Date(minDate) || startDate > new Date(maxDate)) {
+      newErrors.start_date = 'Start date must be within 2 months before and 3 months after current date';
     }
 
-    if (formData.request_type === 'Recurring' && !formData.end_date) {
-      newErrors.end_date = 'Please select an end date';
+    if (formData.request_type === 'Recurring') {
+      const endDate = new Date(formData.end_date);
+      
+      if (!formData.end_date) {
+        newErrors.end_date = 'Please select an end date';
+      } else if (endDate < new Date(minDate) || endDate > new Date(maxDate)) {
+        newErrors.end_date = 'End date must be within 2 months before and 3 months after current date';
+      } else if (endDate < startDate) {
+        newErrors.date_range = 'End date must be after or equal to start date';
+      }
     }
 
     if (!formData.request_reason.trim()) {
@@ -55,12 +72,27 @@ const WFHRequestForm = () => {
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData({
-      ...formData,
-      [name]: type === 'checkbox' ? checked : value,
-    });
+    
+    // For recurring requests, ensure end_date is not before start_date
+    if (name === 'start_date' && formData.request_type === 'Recurring') {
+      const newStartDate = new Date(value);
+      const currentEndDate = new Date(formData.end_date);
+      
+      setFormData(prev => ({
+        ...prev,
+        [name]: value,
+        // Reset end_date if it's before the new start_date
+        end_date: currentEndDate < newStartDate ? value : prev.end_date
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: type === 'checkbox' ? checked : value,
+      }));
+    }
+
     if (errors[name]) {
-      setErrors({ ...errors, [name]: '' });
+      setErrors(prev => ({ ...prev, [name]: '' }));
     }
   };
 
@@ -94,15 +126,15 @@ const WFHRequestForm = () => {
         message: 'WFH request submitted successfully!' 
       });
       // Reset form
-      setFormData({
-        ...formData,
+      setFormData(prev => ({
+        ...prev,
         start_date: '',
         end_date: '',
         recurrence_days: '',
         is_am: false,
         is_pm: false,
         request_reason: ''
-      });
+      }));
     } else {
       setSubmitMessage({ 
         type: 'error', 
@@ -110,7 +142,7 @@ const WFHRequestForm = () => {
       });
     }
   };
-
+  
   return (
     <div className="wfh-request-container" style={{ padding: '20px' }}>
       <h2>Apply Work from Home Arrangement</h2>
@@ -147,13 +179,38 @@ const WFHRequestForm = () => {
 
         {/* For Ad-hoc Requests */}
         {formData.request_type === 'Ad-hoc' && (
+        <div style={{ marginBottom: '15px' }}>
+          <label>Select Date</label>
+          <input
+            type="date"
+            name="start_date"
+            value={formData.start_date}
+            onChange={handleInputChange}
+            min={minDate}
+            max={maxDate}
+            style={{ padding: '8px', marginTop: '5px', width: '100%' }}
+            required
+          />
+          {errors.start_date && (
+            <div style={{ color: '#dc3545', fontSize: '14px', marginTop: '5px' }}>
+              {errors.start_date}
+            </div>
+          )}
+        </div>
+      )}
+
+        {/* For Recurring Requests */}
+        {formData.request_type === 'Recurring' && (
+        <>
           <div style={{ marginBottom: '15px' }}>
-            <label>Select Date</label>
+            <label>Select Start date</label>
             <input
               type="date"
               name="start_date"
               value={formData.start_date}
               onChange={handleInputChange}
+              min={minDate}
+              max={maxDate}
               style={{ padding: '8px', marginTop: '5px', width: '100%' }}
               required
             />
@@ -163,50 +220,31 @@ const WFHRequestForm = () => {
               </div>
             )}
           </div>
-        )}
-
-        {/* For Recurring Requests */}
-        {formData.request_type === 'Recurring' && (
-          <>
-            <div style={{ marginBottom: '15px' }}>
-              <label>Select Start date</label>
-              <input
-                type="date"
-                name="start_date"
-                value={formData.start_date}
-                onChange={handleInputChange}
-                style={{ padding: '8px', marginTop: '5px', width: '100%' }}
-                required
-              />
-              {errors.start_date && (
-                <div style={{ color: '#dc3545', fontSize: '14px', marginTop: '5px' }}>
-                  {errors.start_date}
-                </div>
-              )}
-            </div>
-            
-            <div style={{ marginBottom: '15px' }}>
-              <label>Select End date</label>
-              <input
-                type="date"
-                name="end_date"
-                value={formData.end_date}
-                onChange={handleInputChange}
-                style={{ padding: '8px', marginTop: '5px', width: '100%' }}
-                required
-              />
-              {errors.end_date && (
-                <div style={{ color: '#dc3545', fontSize: '14px', marginTop: '5px' }}>
-                  {errors.end_date}
-                </div>
-              )}
-            </div>
-
-            {errors.date_range && (
-              <div style={{ color: '#dc3545', fontSize: '14px', marginBottom: '15px' }}>
-                {errors.date_range}
+          
+          <div style={{ marginBottom: '15px' }}>
+            <label>Select End date</label>
+            <input
+              type="date"
+              name="end_date"
+              value={formData.end_date}
+              onChange={handleInputChange}
+              min={formData.start_date || minDate}
+              max={maxDate}
+              style={{ padding: '8px', marginTop: '5px', width: '100%' }}
+              required
+            />
+            {errors.end_date && (
+              <div style={{ color: '#dc3545', fontSize: '14px', marginTop: '5px' }}>
+                {errors.end_date}
               </div>
             )}
+          </div>
+
+          {errors.date_range && (
+            <div style={{ color: '#dc3545', fontSize: '14px', marginBottom: '15px' }}>
+              {errors.date_range}
+            </div>
+          )}
 
             <div style={{ marginBottom: '15px' }}>
               <label>Select recurring day:</label>
