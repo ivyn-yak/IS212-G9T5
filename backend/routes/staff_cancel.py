@@ -23,21 +23,10 @@ def cancel_pending_request(staff_id, request_id, specific_date):
     if wfh_request.request_status != 'Pending':
         return jsonify({"error": "Only pending requests can be cancelled"}), 400
 
-    # Get the current date
-    current_date = datetime.now(timezone.utc).date()
-
-    # Define the new allowable timeframe (2 weeks forward and 2 weeks back from the specific date)
-    two_weeks_ago = specific_date - timedelta(days=14)
-    two_weeks_later = specific_date + timedelta(days=14)
-
-    if not (two_weeks_ago <= current_date <= two_weeks_later):
-        return jsonify({"error": f"Cancellation allowed only for requests within 2 weeks from the specific date of {specific_date}"}), 400
-
     # Update the request status to 'Cancelled' and set the reason
     wfh_request.request_status = 'Cancelled'
     cancellation_reason = "Staff initiated cancellation"  # Default reason
 
-    
     # Log the cancellation in WFHRequestLogs
     log_entry = WFHRequestLogs(
         request_id=wfh_request.request_id,

@@ -2,6 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Button, Typography, Box, Card, List, ListItem, ListItemText } from '@mui/material';
 import dayjs from 'dayjs';
+import config from '../../config/config';
+
+const BASE_URL = config.ENDPOINT_BE_URL;
 
 const DeptView = () => {
   const location = useLocation();
@@ -33,12 +36,12 @@ const DeptView = () => {
       setLoading(true);
       try {
         // Fetch managers data
-        const managersResponse = await fetch('/api/managers');
+        const managersResponse = await fetch(`${BASE_URL}/api/managers`);
         const managersData = await managersResponse.json();
         const deptData = managersData[department.toLowerCase()] || [];
 
         // Fetch all employees to get their details
-        const employeesResponse = await fetch('http://localhost:5001/api/all', { 
+        const employeesResponse = await fetch(`${BASE_URL}/api/all`, { 
           credentials: 'include' 
         });
         const employeesData = await employeesResponse.json();
@@ -65,7 +68,7 @@ const DeptView = () => {
 
         // Fetch all schedules at once
         const schedulePromises = managersWithDetails.map(manager =>
-          fetch(`/api/manager/${manager.staff_id}/team_schedule?start_date=${apiDate}&end_date=${apiDate}`)
+          fetch(`${BASE_URL}/api/manager/${manager.staff_id}/team_schedule?start_date=${apiDate}&end_date=${apiDate}`)
             .then(res => res.json())
             .then(data => ({ [manager.staff_id]: data }))
         );

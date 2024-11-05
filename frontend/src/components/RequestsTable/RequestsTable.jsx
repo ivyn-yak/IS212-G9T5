@@ -97,12 +97,13 @@ const RequestsTable = ({ staffId }) => {
         value={filters.status}
         onChange={(e) => setFilters({ ...filters, status: e.target.value })}
       >
-        <option value="">Select Status</option>
+        <option value="">All</option>
         <option value="Approved">Approved</option>
         <option value="Rejected">Rejected</option>
         <option value="Withdrawal">Withdrawal</option>
         <option value="Cancelled">Cancelled</option>
         <option value="Pending">Pending</option>
+        <option value="Pending_Withdraw">Pending Withdraw</option>
       </select>
       <button onClick={handleFilter}>Filter</button>
     </div>
