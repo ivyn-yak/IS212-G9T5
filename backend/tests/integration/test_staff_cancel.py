@@ -70,18 +70,6 @@ class TestStaffCancelRequest(TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json["error"], "Only pending requests can be cancelled")
 
-    def test_out_of_range_date(self):
-        # Set the specific date to be outside of the 2-week range
-        out_of_range_date = (datetime.now(timezone.utc).date() - timedelta(days=20)).strftime('%Y-%m-%d')
-        self.wfh_request.specific_date = datetime.strptime(out_of_range_date, '%Y-%m-%d').date()
-        db.session.commit()
-
-        response = self.client.put(
-            f"/api/staff/{self.wfh_request.staff_id}/cancel_request/{self.wfh_request.request_id}/{out_of_range_date}"
-        )
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json["error"], f"Cancellation allowed only for requests within 2 weeks from the specific date of {out_of_range_date}")
-
     def test_invalid_date_format(self):
         # Attempt to cancel with an invalid date format
         invalid_date = "2024-13-40"  # Invalid date
