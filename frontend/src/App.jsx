@@ -69,6 +69,7 @@ function AppContent() {
   }
 
   return (
+    console.log(staffRole),
     <div className="app-layout">
       <Navbar />
       <div className="main-container">
