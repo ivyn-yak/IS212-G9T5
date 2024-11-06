@@ -54,26 +54,7 @@ def create_app():
         ),
     )
 
-    if os.getenv("TESTING") == "True":
-        origins = [
-            "http://localhost:3000",  # React development server
-            "http://127.0.0.1:3000",
-            "http://localhost:5001",  # Flask development server
-            "http://127.0.0.1:5001"
-        ]
-    else:
-        origins = [
-            "https://is-212-g9-t5.vercel.app",  # Replace with your actual frontend domain
-            "https://is-212-g9-t5-be.vercel.app"        # Replace with your actual API domain
-        ]
-
-    # Configure CORS with specific settings
-    CORS(app, 
-         resources={r"/*": {"origins": origins}},
-         supports_credentials=True,
-         allow_headers=["Content-Type", "Authorization"],
-         methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-         expose_headers=["Content-Range", "X-Content-Range"])
+    CORS(app, supports_credentials=True)
 
     app.register_blueprint(config)
     app.register_blueprint(employee)
