@@ -34,6 +34,7 @@ const ProtectedRoute = ({ children, allowedRoles, staffRole }) => {
 
 function AppContent() {
   const { staffId } = useParams();
+  console.log('staffId', staffId);
   const [staffRole, setStaffRole] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -69,7 +70,7 @@ function AppContent() {
   }
 
   return (
-    console.log(staffRole),
+    console.log('staffRole', staffRole),
     <div className="app-layout">
       <Navbar />
       <div className="main-container">

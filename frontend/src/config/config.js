@@ -1,5 +1,8 @@
 const config = {
-  ENDPOINT_BE_URL: import.meta.env.VITE_ENDPOINT_BE_URL || 'http://localhost:5001',
+  ENDPOINT_BE_URL: import.meta.env.VITE_ENDPOINT_BE_URL 
+  || 'https://is-212-g9-t5-be.vercel.app'
+  || 'http://localhost:5001'
+  ,
 };
 
 if (import.meta.env.DEV) {
