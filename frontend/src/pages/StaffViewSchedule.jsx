@@ -36,6 +36,7 @@ function StaffViewSchedule() {
   };
 
   return (
+    console.log(scheduleData),
     <WeeklyCalendar
       scheduleData={scheduleData}
       isLoading={isLoading}

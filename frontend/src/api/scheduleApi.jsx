@@ -139,6 +139,7 @@ export const fetchManagerSchedule = async (managerId, startDate, endDate) => {
           .map(member => ({
             staffID: member.staff_id.toString(),
             fullName: `${member.staff_fname} ${member.staff_lname}`,
+            position: member.position,
             scheduleTrails: (teamScheduleData.find(t => t.staff_id === member.staff_id)?.ScheduleDetails || [])
               .map(detail => ({
                 date: detail.specific_date,
