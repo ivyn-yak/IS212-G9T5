@@ -21,6 +21,7 @@ const WeeklyCalendar = ({
   onWeekChange,
   initialStartDate 
 }) => {
+  console.log(scheduleData); // Debug log
   // Calculate date limits using dayjs instead of date-fns
   const today = dayjs();
   const minDate = today.subtract(2, 'month');
@@ -234,7 +235,7 @@ const WeeklyCalendar = ({
                   backgroundColor: member.staffID === highlightedStaffId ? '#e8f5e9' : 'transparent'
                 }}
               >
-                <ListItemText primary={member.fullName} />
+                <ListItemText primary={`${member.fullName} - ${member.position}`} />
               </ListItem>
             ))}
           </List>
@@ -247,7 +248,7 @@ const WeeklyCalendar = ({
                   backgroundColor: member.staffID === highlightedStaffId ? '#e8f5e9' : 'transparent'
                 }}
               >
-                <ListItemText primary={member.fullName} />
+                <ListItemText primary={`${member.fullName} - ${member.position}`} />
               </ListItem>
             ))}
           </List>
