@@ -1,6 +1,6 @@
 const config = {
   ENDPOINT_BE_URL: import.meta.env.VITE_ENDPOINT_BE_URL 
-  // || 'http://localhost:5001'
+  || 'http://localhost:5001'
   ,
 };
 
